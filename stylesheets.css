@@ -1,0 +1,58 @@
+.header-bar {
+  width: 100%;          /* Makes it long */;
+  height: 90px;         /* The thickness of the bar */
+  background-color: #3498db; /* A nice blue color */
+  
+  /* The Key Property */
+  border-radius: 25px; /* A very high number ensures perfectly round ends */
+}
+
+.header-elements {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    padding: 0 50px;
+}
+
+.right-menu {
+    display:flex;
+    justify-content: flex-end;
+    gap: 50px;
+    align-items: center;
+}   
+
+.menu {
+    display:flex;
+    justify-content: flex-start;
+    gap: 50px;
+    
+}
+
+.left-menu {
+    display: flex;
+    justify-content: space-around;
+    gap: 5px;
+}
+
+.logo {
+    height: 60px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+    flex: 0 0 auto;
+}
+
+.logo img {
+    height: 100%;
+    width: auto;   
+    display: block;
+    padding-top: 15px;
+}
+
+.header-text {
+    color: white;
+    font-size: 30px;
+    font-weight: bold;
+    text-decoration: none;
+}
