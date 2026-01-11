@@ -1,12 +1,16 @@
 
 
+body {
+    background-color: #f4f7f6; /* A soft light-grey often used for "WanderWise" designs */
+    margin: 0;                /* This removes the default white gap around the edges */
+}
+
 .header-bar {
-  width: 100%;          /* Makes it long */;
-  height: 90px;         /* The thickness of the bar */
-  background-color: #3498db; /* A nice blue color */
+  width: 100%;          
+  height: 90px;         
+  background-color: #3498db; 
   margin: 0;
-  /* The Key Property */
-    border-radius: 0; /* remove rounded corners so bar reaches edges */
+  border-radius: 0; /* remove rounded corners so bar reaches edges */
 }
 /* Reset page default spacing so header can reach edges */
 * { box-sizing: border-box; }
@@ -18,27 +22,56 @@ body { margin: 0; }
     align-items: center;
     height: 100%;
     padding: 0 50px;
-}
+    flex-wrap: nowrap; /* prevent wrapping to next line */
+}   
 
 .right-menu {
     display:flex;
     justify-content: flex-end;
     gap: 50px;
     align-items: center;
-}   
-
-.menu {
-    display:flex;
-    justify-content: flex-start;
-    gap: 50px;
+    flex-direction: row;
+    flex-wrap: nowrap; /* keep children in one row */
+}
     
+
+.right-menu > * {
+    flex: 0 0 auto; /* children should not stretch to full width */
+}
+
+.filter p { margin: 0; } /* avoid default block margins that can push layout */
+
+.filter {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center; /* vertically center icon + text */
+    gap: 10px;
+    background-color: rgba(23, 20, 201, 0.63);
+    padding: 6px 12px;
+    border-radius: 3px;
+}
+
+.filter img {
+    height: 28px;
+    width: 28px;
+    flex: 0 0 auto; /* don't let the image grow or shrink */
+    display: block;
+    object-fit: contain;
+    margin: 0;
+}
+
+.filter p {
+    margin: 0;
+    display: inline-block;
+    white-space: nowrap; /* don't let the label wrap below the icon */
+    color: white;
 }
 
 .left-menu {
     display: flex;
     justify-content: space-around;
     gap: 5px;
-    align-items: center; /* vertically center logo and text */
+    align-items: center; 
 }
 
 .logo {
@@ -69,34 +102,96 @@ body { margin: 0; }
     justify-content: flex-end; 
     align-items: stretch;
     width: 100%;
-    height: 800px;
+    height: 750px;
     padding: 0;
     box-sizing: border-box;
     margin-top: 100px;
 }
 
-.sidebar-container {
-    flex: 0 0 400px;          /* fixed left column width */
-    max-width: 400px;
-    height: 100%;
-    border: 3px solid #3498db;
-    border-radius: 10px;
-    padding: 10px;
-    box-sizing: border-box;
-    margin-left: 200px;
-}
-
 .map-viewport {
     flex: 1 1 auto;           /* take remaining space on the right */
     min-width: 0;             /* allows proper shrinking in flex layout */
-    border: 3px solid #3498db;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border-radius: 10px;
     padding: 10px;
     height: 600px;
     overflow: hidden;
     margin-right: 200px;
+    background: white;
+}
+.sidebar-container {
+    flex: 0 0 400px;          /* fixed left column width */
+    max-width: 400px;
+    height: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+    margin-left: 200px;
+    display: flex;
+    flex-direction: column;
 }
 
+.sidebar-container hr {
+    border: 0;
+    height: 1px;
+    background: #020202; /* visible divider color */
+    margin: 12px 0;
+}
+
+* .sidebar-container {
+    background-color: white;
+}
+
+/* ...existing code... */
+.sidebar-top {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* keep contents left-aligned */
+    gap: 10px;
+    padding: 6px 0;
+}
+
+.sidebar-top img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    display: block;
+}
+
+.sidebar-top h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.scroll-area {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;        
+    box-sizing: border-box;
+}
+
+* .scroll-area {
+    background-color: white;
+}
+
+
+
+.scroll-area::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scroll-area .card {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    margin: 20px;
+    width: 350px;
+    margin-left: 15px;
+    padding-left: 20px;
+}
+
+.scroll-area { scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.18) transparent; }
 
 
 .header-text p { margin: 0; line-height: 1; }
