@@ -1,11 +1,16 @@
+
+
 .header-bar {
   width: 100%;          /* Makes it long */;
   height: 90px;         /* The thickness of the bar */
   background-color: #3498db; /* A nice blue color */
-  
+  margin: 0;
   /* The Key Property */
-  border-radius: 25px; /* A very high number ensures perfectly round ends */
+    border-radius: 0; /* remove rounded corners so bar reaches edges */
 }
+/* Reset page default spacing so header can reach edges */
+* { box-sizing: border-box; }
+body { margin: 0; }
 
 .header-elements {
     display: flex;
@@ -33,6 +38,7 @@
     display: flex;
     justify-content: space-around;
     gap: 5px;
+    align-items: center; /* vertically center logo and text */
 }
 
 .logo {
@@ -47,7 +53,7 @@
     height: 100%;
     width: auto;   
     display: block;
-    padding-top: 15px;
+    padding-top: 0;
 }
 
 .header-text {
@@ -56,3 +62,43 @@
     font-weight: bold;
     text-decoration: none;
 }
+
+.map-card {
+    display: flex;            /* place sidebar and map side-by-side */
+    gap: 20px;                /* space between sidebar and map */
+    justify-content: flex-end; 
+    align-items: stretch;
+    width: 100%;
+    height: 800px;
+    padding: 0;
+    box-sizing: border-box;
+    margin-top: 100px;
+}
+
+.sidebar-container {
+    flex: 0 0 400px;          /* fixed left column width */
+    max-width: 400px;
+    height: 100%;
+    border: 3px solid #3498db;
+    border-radius: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+    margin-left: 200px;
+}
+
+.map-viewport {
+    flex: 1 1 auto;           /* take remaining space on the right */
+    min-width: 0;             /* allows proper shrinking in flex layout */
+    border: 3px solid #3498db;
+    border-radius: 10px;
+    padding: 10px;
+    height: 600px;
+    overflow: hidden;
+    margin-right: 200px;
+}
+
+
+
+.header-text p { margin: 0; line-height: 1; }
+.header-text #Wise { font-size: 26px; margin-bottom: 2px; }
+.header-text #Tagline { font-size: 12px; font-weight: 400; opacity: 0.95; }
