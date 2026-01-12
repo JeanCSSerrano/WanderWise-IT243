@@ -119,6 +119,12 @@ body { margin: 0; }
     margin-right: 200px;
     background: white;
 }
+
+.map-viewport #map {
+    height: 100%;
+    width: 100%;
+    border-radius: 8px;
+}
 .sidebar-container {
     flex: 0 0 400px;          /* fixed left column width */
     max-width: 400px;
