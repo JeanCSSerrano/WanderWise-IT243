@@ -1,90 +1,81 @@
+// --- 1. GLOBAL VARIABLES ---
+const locations = [
+    { id: 1, name: "Burnham Park", lat: 16.4123795, lng: 120.5929704, desc: "The heart of the city.", crowdLevel: "High" },
+    { id: 2, name: "Mines View Observation Deck", lat: 16.4195651, lng: 120.6278588, desc: "Scenic view.", crowdLevel: "Medium" },
+    { id: 3, name: "Wright Park", lat: 16.4156997, lng: 120.6172233, desc: "Horseback riding.", crowdLevel: "Low" },
+    { id: 4, name: "Camp John Hay Art Park", lat: 16.399424, lng: 120.613264, desc: "Pine trees.", crowdLevel: "Low" },
+    { id: 5, name: "Botanical Garden", lat: 16.4150118, lng: 120.6129064, desc: "Gardens.", crowdLevel: "Medium" }
+];
+
+let modal;
+let openModal; // Define globally
+
 document.addEventListener('DOMContentLoaded', () => {
     
-    // --- 1. Map Initialization ---
+    // --- MAP SETUP ---
     const map = L.map('map').setView([16.41106, 120.59332], 14);
     
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    const streetmap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // --- 2. The "Fake Database" (Replace this with Real DB later) ---
-    const locations = [
-        {
-            id: 1,
-            name: "Burnham Park",
-            lat: 16.4125,
-            lng: 120.5927,
-            desc: "The heart of the city.",
-            crowdLevel: "High" // Placeholder for API data
-        },
-        {
-            id: 2,
-            name: "Mines View Park",
-            lat: 16.4234,
-            lng: 120.6306,
-            desc: "Scenic view of mining towns.",
-            crowdLevel: "Medium"
-        },
-        {
-            id: 3,
-            name: "Wright Park",
-            lat: 16.4168,
-            lng: 120.6190,
-            desc: "Famous for horseback riding.",
-            crowdLevel: "Low"
-        },
-        {
-            id: 4,
-            name: "Camp John Hay",
-            lat: 16.3920,
-            lng: 120.6170,
-            desc: "Pine tree wonderland.",
-            crowdLevel: "Low"
-        },
-        {
-            id: 5,
-            name: "Botanical Garden",
-            lat: 16.4143,
-            lng: 120.6120,
-            desc: "Peaceful gardens and tunnels.",
-            crowdLevel: "Medium"
-        }
-    ];
+    const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri'
+    });
 
-    // --- 3. Add Pins to Map & Link to Sidebar ---
-    const markers = {}; // Store markers to access them later
+    const MapLayers = {
+        "Street View": streetmap,
+        "Satellite View": satelliteMap
+    };
+
+    L.control.layers(MapLayers).addTo(map);
+
+    // --- MODAL SETUP (FIXED) ---
+    // Fix 1: Match the ID in your HTML
+    modal = document.getElementById("recommendation-modal");
+
+    // Fix 2: Use querySelector because your HTML uses a class, not an ID
+    const close = document.querySelector(".modalclose-btn");
+
+    openModal = function() {
+        modal.style.display = "block";
+    }
+
+    if (close) {
+        close.onclick = function() {
+            modal.style.display = "none";
+        }
+    }
+    
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    };
+    
+    // --- MARKERS & SIDEBAR (These will work now that the crash is gone) ---
+    const markers = {}; 
 
     locations.forEach(loc => {
-        // Create the marker
         const marker = L.marker([loc.lat, loc.lng]).addTo(map);
         
-        // Add a Popup (This is where your recommendation will eventually go)
         marker.bindPopup(`
             <b>${loc.name}</b><br>
             Status: ${loc.crowdLevel}<br>
             <button onclick="calculateScore(${loc.id})">Get Recommendation</button>
         `);
 
-        // Save marker reference
         markers[loc.id] = marker;
     });
 
-    // --- 4. Make Sidebar Click Zoom to Pin ---
-    // We attach this logic to the existing HTML cards
-    // Note: You need to add data-id="1" etc to your HTML cards for this to match!
-    
     const cards = document.querySelectorAll('.card');
     cards.forEach((card, index) => {
         card.addEventListener('click', () => {
-            // Assuming the order matches the array for now
-            // In a real DB, you'd use IDs
             const loc = locations[index]; 
             if (loc) {
-                map.flyTo([loc.lat, loc.lng], 17); // Smooth zoom
+                map.flyTo([loc.lat, loc.lng], 17);
                 markers[loc.id].openPopup();
-                
-                // On mobile, close the sidebar so they can see the map
                 if(window.innerWidth < 500) {
                     document.getElementById('sidebar').classList.remove('active');
                 }
@@ -92,8 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-
-    // --- Sidebar Toggle Logic (Keep this) ---
+    // --- SIDEBAR TOGGLE ---
     const menuBtn = document.getElementById('menuToggle');
     const closeBtn = document.getElementById('closeSidebar');
     const sidebar = document.getElementById('sidebar');
@@ -111,8 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// Placeholder for your future algorithm
+// --- THE CALCULATE FUNCTION ---
 function calculateScore(id) {
-    alert("Fetching data from BestTime, Weather, and Traffic APIs for ID: " + id);
-    // This is where we will eventually inject the Math!
+    console.log("Opening for ID: " + id);
+    openModal();
 }
