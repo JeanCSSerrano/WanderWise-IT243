@@ -3,15 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>WanderWise</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
     <link rel="stylesheet" href="stylesheets.css">
-
 </head>
 <body>
+
     <div class="header-bar">
         <div class="header-elements">
             <div class="left-menu">
+                <div class="menu-btn" id="menuToggle">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/menu--v1.png" alt="Menu">
+                </div>
+
                 <div class="logo">
                     <img src="images/icons8-location-48.png" alt="WanderWise logo">
                 </div>
@@ -30,16 +34,15 @@
         </div>
     </div>
 
-
     <main>
-        <div class="map-card">
-            <div class="sidebar-container">
-                <div class="sidebar-top">
-                    <img src="" alt="icon">
-                    <h2>Public Spaces</h2>
-                </div>
+        <div class="sidebar-container" id="sidebar">
+            <div class="sidebar-top">
+                <img src="" alt="icon">
+                <h2>Public Spaces</h2>
+                <span class="close-btn" id="closeSidebar">&times;</span>
+            </div>
 
-                <hr>
+            <hr>
             
             <div class="scroll-area">
                 <div class="card">
@@ -47,35 +50,34 @@
                     <p>Baguio City, Baguio</p>
                 </div>
                 <div class="card">
-                    <h3>Lorem</h3>
-                    <p>Lorem ipsum, Lorem</p>
+                    <h3>Mines View Park</h3>
+                    <p>Gibraltar, Baguio</p>
                 </div>
                 <div class="card">
-                    <h3>Lorem</h3>
-                    <p>Lorem ipsum, Lorem</p>
+                    <h3>Wright Park</h3>
+                    <p>Pacdal, Baguio</p>
                 </div>
                 <div class="card">
-                    <h3>Lorem</h3>
-                    <p>Lorem ipsum, Lorem</p>
+                    <h3>Camp John Hay</h3>
+                    <p>Loakan Road, Baguio</p>
                 </div>
                 <div class="card">
-                    <h3>Lorem</h3>
-                    <p>Lorem ipsum, Lorem  </p>
+                    <h3>Botanical Garden</h3>
+                    <p>Leonard Wood, Baguio</p>
                 </div>
                 <div class="card">
-                    <h3>Lorem</h3>
-                    <p>Lorem ipsum, Lorem</p>
+                    <h3>Session Road</h3>
+                    <p>City Proper, Baguio</p>
                 </div>
             </div>
-                
-            </div>
+        </div>
 
-            <div class="map-viewport">
-                <div id="map"></div>
-            </div>
-
+        <div class="map-viewport">
+            <div id="map"></div>
         </div>
     </main>
+
+    
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script src="index.js"></script>
