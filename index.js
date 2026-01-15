@@ -1,5 +1,5 @@
 // TEMPORARY LANG ITONG MGA VARIABLES, LALAGAY DIN NATIN SA DATABASE
-const locations = [
+/*const locations = [
     { 
         id: 1, 
         name: "Burnham Park", 
@@ -51,6 +51,9 @@ const locations = [
         image: "images/botanical_garden.png"
     }
 ];
+*/
+
+let locations = [];
 
 let modal;
 let openModal;
@@ -78,46 +81,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     L.control.layers(MapLayers).addTo(map);
 
-    // MODAL SETUP 
-    modal = document.getElementById("recommendation-modal");
 
-    // FIX 1: Use the specific selector so it finds the correct close button (not the sidebar one)
-    const close = document.querySelector(".modalclose-btn");
+    //FETCHING LOCATIONS FROM DATABASE
+    fetch('database.php')
+        .then (response => response.json())
+        .then (data => {
+            locations = data;
 
-    openModal = function() {
-        modal.style.display = "block";
-    }
+            const markers = {}; 
+            
 
-    if (close) {
-        close.onclick = function() {
-            modal.style.display = "none";
-        }
-    }
-    
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
-        }
-    };
-    
-    // MARKERS AND SIDEBAR DESIGN
-    const markers = {}; 
+            // MARKERS AND SIDEBAR DESIGN
+            locations.forEach(loc => {
+                const marker = L.marker([loc.lat, loc.lng]).addTo(map);
 
-    locations.forEach(loc => {
-        const marker = L.marker([loc.lat, loc.lng]).addTo(map);
-
-        // FOR THE DESCRIPTIONS OF THE MARKERS
-        const popupContent = `
-        <div class="custom-popup">
-            <img src="${loc.image}" alt="${loc.name}" style="width:100%; border-radius:5px; margin-bottom:10px;">
-            <h3 style="margin:0 0 5px 0;">${loc.name}</h3>
-            <p style="font-size:13px; color:#555; line-height:1.4;">${loc.desc}</p>
-            <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
-            <div style="display:flex; justify-content:center; align-items:center;">
-                <button onclick="calculateScore(${loc.id})" class="popup-btn">Analyze Live</button>
-            </div>
-        </div>
-    `;
+                // FOR THE DESCRIPTIONS OF THE MARKERS
+                const popupContent = `
+                <div class="custom-popup">
+                    <img src="${loc.image}" alt="${loc.name}" style="width:100%; border-radius:5px; margin-bottom:10px;">
+                    <h3 style="margin:0 0 5px 0;">${loc.name}</h3>
+                    <p style="font-size:13px; color:#555; line-height:1.4;">${loc.desc}</p>
+                    <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+                    <div style="display:flex; justify-content:center; align-items:center;">
+                        <button onclick="calculateScore(${loc.id})" class="popup-btn">Analyze Live</button>
+                    </div>
+                </div>
+            `;
 
         marker.bindPopup(popupContent, {
             maxWidth: 400,
@@ -141,6 +130,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+}) 
+    .catch(error => console.error("Database Error:", error)); 
+
+
+    // MODAL SETUP 
+    modal = document.getElementById("recommendation-modal");
+
+    
+    const close = document.querySelector(".modalclose-btn");
+
+    openModal = function() {
+        modal.style.display = "block";
+    }
+
+    if (close) {
+        close.onclick = function() {
+            modal.style.display = "none";
+        }
+    }
+    
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    };
+    
+ 
+    
     // SIDEBAR FUNCTIONALITY
     const menuBtn = document.getElementById('menuToggle');
     const closeBtn = document.getElementById('closeSidebar');
@@ -169,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 function calculateScore(id) {
-    const place = locations.find(loc => loc.id === id);
+    const place = locations.find(loc => loc.id == id);
     console.log("Getting Data for: " + id);
 
     if (typeof openModal === "function") {
@@ -326,7 +343,6 @@ function updateForecast(hourlyData) {
 function drawGraph(crowdData) {
     const ctx = document.getElementById('foot-chart');
 
-
     if (myChart) {
         myChart.destroy();
     }
@@ -338,7 +354,6 @@ function drawGraph(crowdData) {
         "1AM", "2AM", "3AM", "4AM", "5AM"
     ];
 
-
     const backgroundColors = crowdData.map((value) => {
         if (value >= 75) {
             return 'rgba(231, 76, 60, 0.7)';
@@ -347,24 +362,25 @@ function drawGraph(crowdData) {
         } else {
             return 'rgba(46, 204, 113, 0.7)';
         }
-    })
+    });
 
     myChart = new Chart(ctx, {
         type: 'bar',
-    data: {
-      labels: hours,
-      datasets: [{
-        label: 'Intensity of Crowd (%)',
-        data: crowdData,
-        borderWidth: 1,
-        backgroundColor: backgroundColors
-      }]
-    },
-    options: {
-      scales: {
-        y: {
-          beginAtZero: true
+        data: {
+            labels: hours,
+            datasets: [{
+                label: 'Intensity of Crowd (%)',
+                data: crowdData,
+                borderWidth: 1,
+                backgroundColor: backgroundColors
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
         }
-      }
-    }
-  })}
+    }); 
+}
