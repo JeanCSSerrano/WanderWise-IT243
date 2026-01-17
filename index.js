@@ -53,6 +53,24 @@
 ];
 */
 
+
+const ALGO_CONFIG = {
+   
+    CROWD_EXPONENT: 3,       
+    MAX_CROWD_PENALTY: 80,   
+    
+    
+    W_SUNNY: 1.0,            
+    W_CLOUDY: 1.0,           
+    W_FOG: 0.85,             
+    W_RAIN: 0.65,            
+    W_STORM: 0.30,            
+    CLOSING_SOON_PENALTY: 25, 
+    CLOSED_SCORE: 0
+}
+
+
+
 let locations = [];
 
 let modal;
@@ -200,21 +218,18 @@ function calculateScore(id) {
     const safe_address = encodeURIComponent(place.venue_address);
     const crowdUrl = `https://besttime.app/api/v1/forecasts?venue_name=${safe_name}&venue_address=${safe_address}&api_key_private=${api_key_private}`;
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lng}&hourly=temperature_2m,relative_humidity_2m,weather_code&timezone=Asia%2FManila&current_weather=true`;
-
-
-
-
-
+    let code;
 
     // FETCHING WEATHER DATA
     fetch(weatherUrl)
         .then(response => response.json())
         .then((weatherResult) => {
-            const code = weatherResult.current_weather.weathercode;
+            code = weatherResult.current_weather.weathercode;
             const temp = weatherResult.current_weather.temperature;  
             const status = weatherStatus(code); 
             document.getElementById("weather-output").innerHTML = `<b>Current Weather:</b> ${status}, ${temp}°C`;
             updateForecast(weatherResult.hourly);
+            
         })
         .catch(err => console.error("Weather API Error:", err)); 
 
@@ -223,28 +238,37 @@ function calculateScore(id) {
         redirect: "follow"
     };
 
-
-
-
-
-
-
     // FETCHING CROWD DATA
     fetch(crowdUrl, requestOptions)
         .then(response => response.json())
-        .then((crowdResult) => {
-            console.log("API Success:", crowdResult);
+        .then((liveData) => {
+            console.log("API Success:", liveData);
     
-            if (crowdResult.status === "OK") {
+            if (liveData.status === "OK") {
                 document.getElementById("modal-text").innerText = `Data Received Successfully! Here is the forecast for today:`
                 
                 let jsDay = new Date().getDay(); 
-                let apiIndex = jsDay - 1;
-                if (apiIndex === -1) apiIndex = 6;
+                let apiIndex = (jsDay + 6) % 7; // Monday-start fix
                 
-                const todayData = crowdResult.analysis[apiIndex];
+                const todayData = liveData.analysis[apiIndex];
                 const crowdNumbers = todayData.day_raw;
+                const hourMap = todayData.hour_analysis; // This maps indexes to actual hours
+                const currentHour = new Date().getHours();
 
+                // 🛠️ THE FIX: Find the correct index for "Now"
+                // Instead of crowdNumbers[22], we find which index actually represents Hour 22
+                const foundIndex = hourMap.findIndex(data => data.hour === currentHour);
+                let currentCrowdVal = 0;
+                if (foundIndex !== -1) {
+                    currentCrowdVal = crowdNumbers[foundIndex];
+                }
+
+                const openTime = place.open_time;
+                const closeTime = place.close_time;
+                
+                // PASS the actual crowd value found in the map
+                generateRecommendation(code, currentCrowdVal, openTime, closeTime);
+                
                 let peakText = "Peak data unavailable";
                 if (todayData.peak_hours && todayData.peak_hours.length > 0) {
                     const peakStart = todayData.peak_hours[0].peak_start;
@@ -252,8 +276,9 @@ function calculateScore(id) {
                     peakText = `<b>Busy Hours:</b> ${peakStart}:00 to ${peakEnd}:00`;
                 }
                 drawGraph(crowdNumbers);
+                
             } else {
-                document.getElementById("modal-text").innerText = "API Error: " + crowdResult.message;
+                document.getElementById("modal-text").innerText = "API Error: " + liveData.message;
             }
         })
         .catch((error) => {
@@ -294,8 +319,8 @@ function updateForecast(hourlyData) {
     // 1. Get the current hour
     const currentHour = new Date().getHours(); 
 
-    // 2. Loop 5 times
-    for (let i = 0; i < 5; i++) {
+    // 2. Loop 10 times (Show next 10 hours)
+    for (let i = 0; i < 10; i++) {
         
         // This index grabs the data from the API array
         let futureIndex = currentHour + i;
@@ -306,7 +331,7 @@ function updateForecast(hourlyData) {
 
         // --- FIXED TIME LOGIC ---
         // We use % 24 so that if the hour is 25 (1 AM tomorrow), it becomes 1.
-        let rawHour = futureIndex % 24; 
+        let rawHour = futureIndex % 24;
         let timeLabel = "";
 
         if (rawHour === 0) {
@@ -322,7 +347,7 @@ function updateForecast(hourlyData) {
 
         // GET EMOJI
         let status = weatherStatus(code);
-        let emoji = status.substring(0, 2); 
+        let emoji = status.substring(0, 2);
 
         // UPDATE HTML
         // Make sure these IDs exist in your HTML (time-0, time-1, etc.)
@@ -375,7 +400,8 @@ function drawGraph(crowdData) {
                 backgroundColor: backgroundColors
             }]
         },
-        options: {
+        options: {responsive: true,
+            maintainAspectRatio: false,
             scales: {
                 y: {
                     beginAtZero: true
@@ -383,4 +409,118 @@ function drawGraph(crowdData) {
             }
         }
     }); 
+}
+
+
+
+
+function getWeatherScore(code) {
+    if (code === 0) {
+        return { val: 1.0, desc: "Perfect sunny weather", type: "pro" };
+    } 
+    else if (code >= 1 && code <= 3) {
+        // 🛠️ FIX: Removed extra spaces in "pro" so the comparison works!
+        return { val: 1.0, desc: "Cloudy but dry", type: "pro" };
+    }
+    else if (code >= 45 && code <= 48) {
+        return { val: 0.8, desc: "Foggy conditions", type: "neutral" };
+    }
+    else if ((code >= 51 && code <= 55) || (code >= 80 && code <= 82)) {
+        return { val: 0.7, desc: "Light rain/showers", type: "con" };
+    }
+    else if (code >= 61 && code <= 65) {
+        return { val: 0.4, desc: "Raining currently", type: "con" };
+    }
+    else if (code >= 95) {
+        return { val: 0.2, desc: "Thunderstorms active", type: "con" };
+    }
+    return { val: 1.0, desc: "Weather data unavailable", type: "neutral" };
+}
+
+function getCrowdScore(percentage) {
+    if (percentage === undefined || percentage === null) {
+        return { val: 1.0, desc: "Crowd data unavailable", type: "neutral" };
+    }
+
+    if (percentage <= 30) {
+        return { val: 1.0, desc: "Low crowd levels", type: "pro" };
+    } 
+    else if (percentage <= 60) {
+        return { val: 0.8, desc: "Moderate foot traffic", type: "neutral" };
+    } 
+    else if (percentage <= 85) {
+        return { val: 0.5, desc: "High foot traffic", type: "con" };
+    } 
+    else {
+        return { val: 0.2, desc: "Extremely busy", type: "con" };
+    }
+}
+
+function generateRecommendation(weatherCode, crowdPercent, openTime, closeTime) {
+    const currentHour = new Date().getHours();
+    
+    // Check if the venue is 24/7 (Open 0, Close 24)
+    const isAlwaysOpen = (openTime === 0 && closeTime === 24);
+
+    if (!isAlwaysOpen) {
+        // Simple 24-hour check
+        if (currentHour < openTime || currentHour >= closeTime) {
+            const scoreH1 = document.querySelector(".score-placeholder h1");
+            const scoreP = document.querySelector(".score-placeholder p");
+            
+            if (scoreH1) scoreH1.innerText = "0 / 100";
+            if (scoreP) {
+                scoreP.innerHTML = `<b style="color:#ff4757">CLOSED</b><br>
+                                   Operational Hours: ${openTime}:00 - ${closeTime}:00`;
+            }
+            return; // 🛑 EXIT: Do not calculate weather or crowd
+        }
+    }
+
+    let closingSoon = false;
+    if (closeTime - currentHour === 1) {
+        closingSoon = true;
+    }
+
+    // 🧠 THE BRAIN MATH
+    let pros = [];
+    let cons = [];
+
+    const wResult = getWeatherScore(weatherCode);
+    const cResult = getCrowdScore(crowdPercent);
+
+    // Exponential Crowd Penalty
+    let crowdRatio = crowdPercent / 100;
+    let crowdPenalty = Math.pow(crowdRatio, 3) * 80;
+
+    let baseScore = 100 - crowdPenalty;
+
+    // NEW: Apply the "Closing Soon" penalty
+    if (closingSoon) {
+        baseScore = baseScore - ALGO_CONFIG.CLOSING_SOON_PENALTY;
+        cons.push(`Closing soon (${closeTime}:00)`);
+    }
+    let finalScore = baseScore * wResult.val;
+
+    if (finalScore < 0) finalScore = 0;
+
+    // FILL BUCKETS
+    if (wResult.type === "pro") pros.push(wResult.desc);
+    if (wResult.type === "con") cons.push(wResult.desc);
+    
+    // 🛠️ FIX: Comparing the NUMBER (crowdPercent) instead of the OBJECT (cResult)
+    if (crowdPercent > 70) {
+        cons.push("Very crowded");
+    } else if (crowdPercent < 30) {
+        pros.push("Quiet & Peaceful");
+    }
+
+    // UPDATE UI
+    const scoreBox = document.querySelector(".score-placeholder h1");
+    if (scoreBox) scoreBox.innerText = `${Math.round(finalScore)} / 100`;
+
+    const descBox = document.querySelector(".score-placeholder p");
+    if (descBox) {
+        descBox.innerHTML = `<b>Pros:</b> ${pros.join(", ") || "None"} <br> <b>Cons:</b> ${cons.join(", ") || "None"}`;
+    }
 }

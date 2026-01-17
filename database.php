@@ -22,7 +22,10 @@ if ($result->num_rows > 0) {
             "lng" => $row["lng"],
             "venue_address" => $row["venue_address"],
             "desc" => $row["description"],
-            "image" => $row["image_url"]
+            "image" => $row["image_url"],
+            "open_time" => $row["open_time"],
+            "close_time" => $row["close_time"],
+            
         );
     }
 }

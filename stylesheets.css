@@ -214,50 +214,172 @@ body {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.6); /* Darker backdrop for focus */
+    backdrop-filter: blur(3px); /* Makes the background map blurry */
 }
 
 .modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    height: 80vh;
-    border-radius: 8px;
-    position: relative;
+    background-color: #ffffff;
+    margin: 4% auto; /* A bit higher up */
+    width: 70%; /* Slightly narrower for a cleaner look */
+    height: 85vh;
+    border-radius: 15px; /* Softer corners */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Keeps the rounded corners clean */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.chart-container {
-    position: relative;
+/* Modal Header */
+modal {
+    position: fixed;
+    display: none;
+    z-index: 3000;
+    left: 0;
+    top: 0;
     width: 100%;
-    height: 300px;
-    margin-top: 20px;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); 
+    backdrop-filter: blur(3px);
 }
 
-#weather-output {
-    margin: 0;
-    font-weight: bold;
-    float: right;
+.modal-content {
+    background-color: #ffffff;
+    margin: 4% auto;
+    width: 70%;
+    height: 85vh;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+
+/* Header */
+.modal-header {
+    background-color: #3498db;
+    color: white;
+    padding: 15px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 { margin: 0; font-size: 22px; font-weight: 600; }
+
+.modalclose-btn {
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.modalclose-btn:hover { opacity: 0.7; }
+
+/* Body */
+.modal-body {
+    padding: 25px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* --- Section 1: Weather --- */
+.weather-section {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.weather-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.weather-header p { margin: 0; font-size: 14px; color: #666; }
+#weather-output { font-weight: bold; color: #2c3e50; font-size: 16px; }
 
 .forecast-container {
     display: flex;
+    gap: 12px;
     overflow-x: auto;
-    gap: 10px;
-    float: right;
+    padding-bottom: 5px;
 }
 
 .hour-card {
-    background: #f0f2f5;
-    border-radius: 8px;
+    background: white;
+    min-width: 80px;
     padding: 10px;
-    min-width: 70px;     /* Forces them to be wide enough */
+    border-radius: 10px;
     text-align: center;
-    border: 1px solid #ddd;
-} 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+    transition: transform 0.2s;
+}
+.hour-card:hover { transform: translateY(-3px); border-color: #3498db; }
 
+.hour-time { font-size: 12px; color: #888; margin-bottom: 5px; display: block; }
+.hour-icon { font-size: 24px; display: block; margin: 5px 0; }
+.hour-temp { font-size: 14px; font-weight: bold; color: #333; display: block; }
 
-.hour-time { font-size: 12px; color: #555; display: block;}
-.hour-icon { font-size: 20px; display: block; margin: 5px 0;}
-.hour-temp { font-size: 14px; font-weight: bold; color: #333; display: block;}
+/* --- Section 2: Chart --- */
+.chart-section {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+
+/* CLEANED: Moved inline styles here */
+.chart-section h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #444;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 500px;
+    width: 100%;
+}
+
+/* --- Section 3: Algorithm --- */
+.algorithm-section {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    margin-top: 10px;
+}
+
+/* CLEANED: Moved inline styles here */
+.algorithm-section h3 {
+    margin-top: 0;
+}
+
+/* CLEANED: Moved inline styles here */
+.algorithm-note {
+    font-size: 12px;
+    margin-top: 10px;
+    opacity: 0.9;
+}
+
+.score-placeholder {
+    border: 2px dashed rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.score-placeholder h1 { margin: 0; font-size: 32px; }
+.score-placeholder p { margin: 5px 0 0 0; opacity: 0.8; font-size: 14px; }
