@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 18, 2026 at 12:11 PM
+-- Generation Time: Jan 18, 2026 at 01:12 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -40,7 +40,6 @@ CREATE TABLE `comments` (
 --
 
 INSERT INTO `comments` (`id`, `user_id`, `location_id`, `comment_text`, `created_at`) VALUES
-(1, 3, 1, 'This is a manual test comment to check the UI.', '2026-01-18 09:27:10'),
 (2, 3, 6, 'test test test\r\n', '2026-01-18 10:15:55'),
 (3, 1, 4, 'hatdog\r\n', '2026-01-18 10:18:17');
 
