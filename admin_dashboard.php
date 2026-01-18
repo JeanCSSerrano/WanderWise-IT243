@@ -12,7 +12,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard - WanderWise</title>
+    <title>Dashboard - Lakative</title>
     <link rel="stylesheet" href="stylesheets.css">
 </head>
 <body>
@@ -20,10 +20,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
         <div class="header-elements">
             <div class="left-menu">
                 <div class="logo">
-                    <img src="images/icons8-location-48.png" alt="WanderWise logo">
+                    <img src="images/icons8-location-48.png" alt="Lakative logo">
                 </div>
                 <div class="header-text">
-                    <p id="Wise">Admin Control</p>
+                    <p id="Wise">Admin Dashboard</p>
                 </div>
             </div>
             <div class="right-menu">

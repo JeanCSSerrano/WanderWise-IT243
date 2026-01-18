@@ -36,7 +36,7 @@
 
                 <div class="auth-toggle">
                     <?php if (isset($_SESSION['username'])): ?>
-                        <a href="logout.php" class="logout-btn">Logout</a>
+                        <a href="login.php" class="logout-btn">Logout</a>
                     <?php else: ?>
                         <a href="login.php" class="login-btn">Login</a>
                     <?php endif; ?>
@@ -76,6 +76,11 @@
                     <h3>Botanical Garden</h3>
                     <p>Leonard Wood, Baguio</p>
                 </div>
+                <div class="card">
+                    <h3>SM Baguio</h3>
+                    <p>Luneta Hill, Baguio</p>
+                </div>
+
             </div>
         </div>
 
@@ -85,7 +90,7 @@
     </main>
 
 
-    <div id="recommendation-modal" class="modal">
+<div id="recommendation-modal" class="modal">
         <div class="modal-content">
 
             <div class="modal-header">
@@ -94,13 +99,28 @@
             </div>
 
             <div class="modal-body">
-                
+                <div class="comments-section">
+                    <h3>User Reviews</h3>
+                    <div id="comments-list" class="comments-list">
+                        <p>Loading comments...</p>
+                    </div>
+                    <div class="comment-form-wrapper">
+                        <?php if (isset($_SESSION['user_id'])): ?>
+                            <textarea id="comment-input" placeholder="Share your experience..."></textarea>
+                            <button onclick="postComment()" class="auth-btn" style="width: auto; padding: 8px 15px;">Post</button>
+                        <?php else: ?>
+                            <p style="font-size: 13px; color: #666;">
+                                <a href="login.php" style="color: #3498db;">Login</a> to leave a comment.
+                            </p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
                 <div class="weather-section">
                     <div class="weather-header">
                         <p id="modal-text">Status: Fetching live data...</p>
                         <p id="weather-output">Loading Weather...</p>
                     </div>
-
                     <div class="forecast-container">
                         <div class="hour-card"><span id="time-0" class="hour-time">--</span><span id="icon-0" class="hour-icon">❓</span><span id="temp-0" class="hour-temp">--°</span></div>
                         <div class="hour-card"><span id="time-1" class="hour-time">--</span><span id="icon-1" class="hour-icon">❓</span><span id="temp-1" class="hour-temp">--°</span></div>
@@ -128,7 +148,6 @@
                         <h1>-- / 100</h1>
                         <p>Score calculation coming soon...</p>
                     </div>
-                    
                 </div>
 
             </div> </div>

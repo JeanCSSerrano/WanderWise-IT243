@@ -56,7 +56,7 @@
 
 const ALGO_CONFIG = {
    
-    CROWD_EXPONENT: 2,       
+    CROWD_EXPONENT: 2.5,       // Gentler curve
     MAX_CROWD_PENALTY: 100,  
     
     
@@ -69,8 +69,8 @@ const ALGO_CONFIG = {
     CLOSED_SCORE: 0,
 
     
-    CURRENT_WEIGHT: 0.6, 
-    FUTURE_WEIGHT: 0.4   
+    CURRENT_WEIGHT: 0.7, 
+    FUTURE_WEIGHT: 0.3   
 }
 
 
@@ -211,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function calculateScore(id) {
     const place = locations.find(loc => loc.id == id);
     console.log("Getting Data for: " + id);
+    loadComments(id);
 
     if (typeof openModal === "function") {
         document.getElementById("modal-title").innerText = `Analysis for ${place.name}`;
@@ -260,26 +261,50 @@ function calculateScore(id) {
                 const crowdNumbers = todayData.day_raw;
                 const hourMap = todayData.hour_analysis; 
                 const currentHour = new Date().getHours();
-                const futureHour = (currentHour + 2) % 24; 
+                
+                const openTime = place.open_time;
+                const closeTime = place.close_time;
+                
+            
+                
+                // FUTURE CROWDS:
+                let futureCrowds = [];
 
-                // Find index for NOW
+                // hour 1
+                const h1Index = hourMap.findIndex(data => data.hour === (currentHour + 1) % 24);
+                if (h1Index !== -1) futureCrowds.push(crowdNumbers[h1Index]);
+
+                // hour 2
+                const h2Index = hourMap.findIndex(data => data.hour === (currentHour + 2) % 24);
+                if (h2Index !== -1) futureCrowds.push(crowdNumbers[h2Index]);
+
+                
+                let futureCrowdVal = 0;
+                if (futureCrowds.length > 0) {
+                    futureCrowdVal = Math.max(...futureCrowds);
+                }
+
+                // Find index for Current Hour
                 const foundIndex = hourMap.findIndex(data => data.hour === currentHour);
                 let currentCrowdVal = 0;
                 if (foundIndex !== -1) {
                     currentCrowdVal = crowdNumbers[foundIndex];
                 }
 
-                // Find index for 2 HOURS FROM NOW
-                const futureIndex = hourMap.findIndex(data => data.hour === futureHour);
-                let futureCrowdVal = 0;
-                if (futureIndex !== -1) {
-                    futureCrowdVal = crowdNumbers[futureIndex];
-                }
 
-                const openTime = place.open_time;
-                const closeTime = place.close_time;
-                
-                const futureWeatherCode = hourlyWeather[currentHour + 2] || code;
+                // 2. FUTURE WEATHER: Check Hour+1 and Hour+2, pick the WORST
+                const w1 = hourlyWeather[currentHour + 1] || code;
+                const w2 = hourlyWeather[currentHour + 2] || code;
+
+                // Default to first hour
+                let futureWeatherCode = w1; 
+
+                // Logic: If either hour has rain (>50) or storm (>90), use that code
+                if (w2 > 50) futureWeatherCode = w2; // If Hour 2 is rainy, warn about that
+                if (w1 > 50) futureWeatherCode = w1; // If Hour 1 is rainy, warn about that (priority)
+                if (w2 > 90) futureWeatherCode = w2; // If Hour 2 is a STORM, definitely warn that
+                if (w1 > 90) futureWeatherCode = w1; // If Hour 1 is a STORM, definitely warn that
+
 
                 generateRecommendation(code, currentCrowdVal, openTime, closeTime, futureWeatherCode, futureCrowdVal);
                 
@@ -434,7 +459,6 @@ function getWeatherScore(code) {
     return { val: 1.0, desc: "Weather data unavailable", type: "neutral" };
 }
 
-// RESTORED: This function is used to help generate text labels
 function getCrowdScore(percentage) {
     if (percentage === undefined || percentage === null) {
         return { val: 1.0, desc: "Crowd data unavailable", type: "neutral" };
@@ -443,7 +467,8 @@ function getCrowdScore(percentage) {
         return { val: 1.0, desc: "Low crowd levels", type: "pro" };
     } 
     else if (percentage <= 60) {
-        return { val: 0.8, desc: "Moderate foot traffic", type: "con" };
+        
+        return { val: 0.8, desc: "Moderate foot traffic", type: "con" }; 
     } 
     else if (percentage <= 85) {
         return { val: 0.5, desc: "High foot traffic", type: "con" };
@@ -456,8 +481,11 @@ function getCrowdScore(percentage) {
 
 function generateRecommendation(weatherCode, crowdPercent, openTime, closeTime, futureWeatherCode, futureCrowdPercent) {
     const currentHour = new Date().getHours();
+
+    let testCrowd = (crowdPercent * ALGO_CONFIG.CURRENT_WEIGHT) + (futureCrowdPercent * ALGO_CONFIG.FUTURE_WEIGHT);
+    console.log(`Current: ${crowdPercent}, Future: ${futureCrowdPercent}, BLENDED SCORE: ${testCrowd}`);
     
-    // 🛑 BOUNCER CHECK
+    
    if (openTime !== 0 || closeTime !== 24) {
         if (currentHour < openTime || currentHour >= closeTime) {
             const scoreH1 = document.querySelector(".score-placeholder h1");
@@ -471,53 +499,55 @@ function generateRecommendation(weatherCode, crowdPercent, openTime, closeTime, 
         }
     }
 
-    // 🧠 THE BRAIN MATH
+    // ALGORITHM
     let pros = [];
     let cons = [];
 
-    // --- 🕒 1. THE BLENDED CROWD MATH ---
+    // THE BLENDED CROWD MATH ---
     let blendedCrowd = (crowdPercent * ALGO_CONFIG.CURRENT_WEIGHT) + (futureCrowdPercent * ALGO_CONFIG.FUTURE_WEIGHT);
     let crowdRatio = blendedCrowd / 100;
     let crowdPenalty = Math.pow(crowdRatio, ALGO_CONFIG.CROWD_EXPONENT) * ALGO_CONFIG.MAX_CROWD_PENALTY;
 
     let baseScore = 100 - crowdPenalty;
 
-    // --- 🌤️ 2. THE BLENDED WEATHER MATH ---
+    // THE BLENDED WEATHER MATH ---
     const wNow = getWeatherScore(weatherCode);
     const wFuture = getWeatherScore(futureWeatherCode);
     let effectiveWeatherVal = Math.min(wNow.val, wFuture.val);
 
-    // --- ⚠️ 3. FIXED PENALTIES ---
+    //  FIXED PENALTIES ---
     if (closeTime - currentHour === 1) {
         baseScore = baseScore - ALGO_CONFIG.CLOSING_SOON_PENALTY;
         cons.push(`Closing soon (${closeTime}:00)`);
     }
 
-    // --- 🏁 4. FINAL SCORE ---
+    // FINAL SCORE ---
     let finalScore = baseScore * effectiveWeatherVal;
     if (finalScore < 0) finalScore = 0;
 
-    // --- 📝 5. FILL BUCKETS ---
-    // 1. Process Current Weather
-    if (wNow.type === "pro") {
-        pros.push(wNow.desc);
-    } else if (wNow.type === "con") {
-        cons.push(wNow.desc);
+    // FILL BUCKETS ---
+    const cResult = getCrowdScore(blendedCrowd); 
+
+   
+    if (cResult.type === "pro") {
+        pros.push(cResult.desc);
+    } else {
+        cons.push(cResult.desc); 
     }
 
-    // 2. Process Future Weather Trend
+    
+    if (wNow.type === "pro") pros.push(wNow.desc);
+    if (wNow.type === "con") cons.push(wNow.desc);
+
+    
     if (wFuture.val < wNow.val) {
-        // If the future is worse than now, add it as a Con
+        
         cons.push(`Weather worsening soon (${wFuture.desc})`);
     } else if (wNow.val === 1.0 && wFuture.val === 1.0) {
-        // If both are perfect, confirm the stability
+        
         pros.push("Consistent dry weather ahead");
     }
 
-   const cResult = getCrowdScore(blendedCrowd); // Translate the blended number!
-    if (cResult.type === "pro") pros.push(cResult.desc);
-    if (cResult.type === "con") cons.push(cResult.desc);
-    if (cResult.type === "neutral") pros.push(cResult.desc); // Mention moderate crowds as a pro/neutral info
     // UPDATE UI
     const scoreBox = document.querySelector(".score-placeholder h1");
     if (scoreBox) scoreBox.innerText = `${Math.round(finalScore)} / 100`;
@@ -526,4 +556,70 @@ function generateRecommendation(weatherCode, crowdPercent, openTime, closeTime, 
     if (descBox) {
         descBox.innerHTML = `<b>Pros:</b> ${pros.join(", ") || "None"} <br> <b>Cons:</b> ${cons.join(", ") || "None"}`;
     }
+}
+
+
+//COMMENTS
+
+let currentLocationId = null; 
+
+function loadComments(id) {
+    currentLocationId = id; 
+    const list = document.getElementById("comments-list");
+    list.innerHTML = "<p>Loading comments...</p>";
+
+    fetch(`get_comments.php?location_id=${id}`)
+        .then(response => response.json())
+        .then(data => {
+            list.innerHTML = ""; 
+            
+            if (data.length === 0) {
+                list.innerHTML = "<p style='color:#888; font-size:13px;'>Enter Comment</p>";
+                return;
+            }
+
+            
+            data.forEach(c => {
+                const item = `
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <span class="comment-user">${c.username}</span>
+                            <span class="comment-date">${c.created_at}</span>
+                        </div>
+                        <p class="comment-body">${c.comment_text}</p>
+                    </div>
+                `;
+                list.innerHTML += item;
+            });
+        })
+        .catch(err => console.error("Comment Error:", err));
+}
+
+function postComment() {
+    const input = document.getElementById("comment-input");
+    const text = input.value;
+
+    if (!text.trim()) {
+        alert("Please write something first!");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("location_id", currentLocationId);
+    formData.append("comment_text", text);
+
+    fetch("submit_comment.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            input.value = ""; 
+            loadComments(currentLocationId); 
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(err => console.error("Post Error:", err));
 }
