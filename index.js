@@ -56,8 +56,8 @@
 
 const ALGO_CONFIG = {
    
-    CROWD_EXPONENT: 3,       
-    MAX_CROWD_PENALTY: 80,   
+    CROWD_EXPONENT: 2,       
+    MAX_CROWD_PENALTY: 100,  
     
     
     W_SUNNY: 1.0,            
@@ -65,8 +65,12 @@ const ALGO_CONFIG = {
     W_FOG: 0.85,             
     W_RAIN: 0.65,            
     W_STORM: 0.30,            
-    CLOSING_SOON_PENALTY: 25, 
-    CLOSED_SCORE: 0
+    CLOSING_SOON_PENALTY: 30, 
+    CLOSED_SCORE: 0,
+
+    
+    CURRENT_WEIGHT: 0.6, 
+    FUTURE_WEIGHT: 0.4   
 }
 
 
@@ -76,6 +80,7 @@ let locations = [];
 let modal;
 let openModal;
 let myChart;
+let hourlyWeather = []; 
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -225,6 +230,7 @@ function calculateScore(id) {
         .then(response => response.json())
         .then((weatherResult) => {
             code = weatherResult.current_weather.weathercode;
+            hourlyWeather = weatherResult.hourly.weather_code; 
             const temp = weatherResult.current_weather.temperature;  
             const status = weatherStatus(code); 
             document.getElementById("weather-output").innerHTML = `<b>Current Weather:</b> ${status}, ${temp}°C`;
@@ -248,33 +254,35 @@ function calculateScore(id) {
                 document.getElementById("modal-text").innerText = `Data Received Successfully! Here is the forecast for today:`
                 
                 let jsDay = new Date().getDay(); 
-                let apiIndex = (jsDay + 6) % 7; // Monday-start fix
+                let apiIndex = (jsDay + 6) % 7; 
                 
                 const todayData = liveData.analysis[apiIndex];
                 const crowdNumbers = todayData.day_raw;
-                const hourMap = todayData.hour_analysis; // This maps indexes to actual hours
+                const hourMap = todayData.hour_analysis; 
                 const currentHour = new Date().getHours();
+                const futureHour = (currentHour + 2) % 24; 
 
-                // 🛠️ THE FIX: Find the correct index for "Now"
-                // Instead of crowdNumbers[22], we find which index actually represents Hour 22
+                // Find index for NOW
                 const foundIndex = hourMap.findIndex(data => data.hour === currentHour);
                 let currentCrowdVal = 0;
                 if (foundIndex !== -1) {
                     currentCrowdVal = crowdNumbers[foundIndex];
                 }
 
+                // Find index for 2 HOURS FROM NOW
+                const futureIndex = hourMap.findIndex(data => data.hour === futureHour);
+                let futureCrowdVal = 0;
+                if (futureIndex !== -1) {
+                    futureCrowdVal = crowdNumbers[futureIndex];
+                }
+
                 const openTime = place.open_time;
                 const closeTime = place.close_time;
                 
-                // PASS the actual crowd value found in the map
-                generateRecommendation(code, currentCrowdVal, openTime, closeTime);
+                const futureWeatherCode = hourlyWeather[currentHour + 2] || code;
+
+                generateRecommendation(code, currentCrowdVal, openTime, closeTime, futureWeatherCode, futureCrowdVal);
                 
-                let peakText = "Peak data unavailable";
-                if (todayData.peak_hours && todayData.peak_hours.length > 0) {
-                    const peakStart = todayData.peak_hours[0].peak_start;
-                    const peakEnd = todayData.peak_hours[0].peak_end;
-                    peakText = `<b>Busy Hours:</b> ${peakStart}:00 to ${peakEnd}:00`;
-                }
                 drawGraph(crowdNumbers);
                 
             } else {
@@ -316,21 +324,15 @@ function weatherStatus(code) {
 
 function updateForecast(hourlyData) {
     
-    // 1. Get the current hour
     const currentHour = new Date().getHours(); 
 
-    // 2. Loop 10 times (Show next 10 hours)
     for (let i = 0; i < 10; i++) {
         
-        // This index grabs the data from the API array
         let futureIndex = currentHour + i;
 
-        // GET DATA
         let temp = hourlyData.temperature_2m[futureIndex];
         let code = hourlyData.weather_code[futureIndex];
 
-        // --- FIXED TIME LOGIC ---
-        // We use % 24 so that if the hour is 25 (1 AM tomorrow), it becomes 1.
         let rawHour = futureIndex % 24;
         let timeLabel = "";
 
@@ -343,14 +345,10 @@ function updateForecast(hourlyData) {
         } else {
             timeLabel = rawHour + " AM";
         }
-        // ------------------------
 
-        // GET EMOJI
         let status = weatherStatus(code);
         let emoji = status.substring(0, 2);
 
-        // UPDATE HTML
-        // Make sure these IDs exist in your HTML (time-0, time-1, etc.)
         const timeEl = document.getElementById("time-" + i);
         const iconEl = document.getElementById("icon-" + i);
         const tempEl = document.getElementById("temp-" + i);
@@ -419,8 +417,7 @@ function getWeatherScore(code) {
         return { val: 1.0, desc: "Perfect sunny weather", type: "pro" };
     } 
     else if (code >= 1 && code <= 3) {
-        // 🛠️ FIX: Removed extra spaces in "pro" so the comparison works!
-        return { val: 1.0, desc: "Cloudy but dry", type: "pro" };
+        return { val: 1.0, desc: "Cloudy", type: "pro" };
     }
     else if (code >= 45 && code <= 48) {
         return { val: 0.8, desc: "Foggy conditions", type: "neutral" };
@@ -437,16 +434,16 @@ function getWeatherScore(code) {
     return { val: 1.0, desc: "Weather data unavailable", type: "neutral" };
 }
 
+// RESTORED: This function is used to help generate text labels
 function getCrowdScore(percentage) {
     if (percentage === undefined || percentage === null) {
         return { val: 1.0, desc: "Crowd data unavailable", type: "neutral" };
     }
-
     if (percentage <= 30) {
         return { val: 1.0, desc: "Low crowd levels", type: "pro" };
     } 
     else if (percentage <= 60) {
-        return { val: 0.8, desc: "Moderate foot traffic", type: "neutral" };
+        return { val: 0.8, desc: "Moderate foot traffic", type: "con" };
     } 
     else if (percentage <= 85) {
         return { val: 0.5, desc: "High foot traffic", type: "con" };
@@ -456,65 +453,71 @@ function getCrowdScore(percentage) {
     }
 }
 
-function generateRecommendation(weatherCode, crowdPercent, openTime, closeTime) {
+
+function generateRecommendation(weatherCode, crowdPercent, openTime, closeTime, futureWeatherCode, futureCrowdPercent) {
     const currentHour = new Date().getHours();
     
-    // Check if the venue is 24/7 (Open 0, Close 24)
-    const isAlwaysOpen = (openTime === 0 && closeTime === 24);
-
-    if (!isAlwaysOpen) {
-        // Simple 24-hour check
+    // 🛑 BOUNCER CHECK
+   if (openTime !== 0 || closeTime !== 24) {
         if (currentHour < openTime || currentHour >= closeTime) {
             const scoreH1 = document.querySelector(".score-placeholder h1");
-            const scoreP = document.querySelector(".score-placeholder p");
-            
             if (scoreH1) scoreH1.innerText = "0 / 100";
+            const scoreP = document.querySelector(".score-placeholder p");
             if (scoreP) {
                 scoreP.innerHTML = `<b style="color:#ff4757">CLOSED</b><br>
                                    Operational Hours: ${openTime}:00 - ${closeTime}:00`;
             }
-            return; // 🛑 EXIT: Do not calculate weather or crowd
+            return; 
         }
-    }
-
-    let closingSoon = false;
-    if (closeTime - currentHour === 1) {
-        closingSoon = true;
     }
 
     // 🧠 THE BRAIN MATH
     let pros = [];
     let cons = [];
 
-    const wResult = getWeatherScore(weatherCode);
-    const cResult = getCrowdScore(crowdPercent);
-
-    // Exponential Crowd Penalty
-    let crowdRatio = crowdPercent / 100;
-    let crowdPenalty = Math.pow(crowdRatio, 3) * 80;
+    // --- 🕒 1. THE BLENDED CROWD MATH ---
+    let blendedCrowd = (crowdPercent * ALGO_CONFIG.CURRENT_WEIGHT) + (futureCrowdPercent * ALGO_CONFIG.FUTURE_WEIGHT);
+    let crowdRatio = blendedCrowd / 100;
+    let crowdPenalty = Math.pow(crowdRatio, ALGO_CONFIG.CROWD_EXPONENT) * ALGO_CONFIG.MAX_CROWD_PENALTY;
 
     let baseScore = 100 - crowdPenalty;
 
-    // NEW: Apply the "Closing Soon" penalty
-    if (closingSoon) {
+    // --- 🌤️ 2. THE BLENDED WEATHER MATH ---
+    const wNow = getWeatherScore(weatherCode);
+    const wFuture = getWeatherScore(futureWeatherCode);
+    let effectiveWeatherVal = Math.min(wNow.val, wFuture.val);
+
+    // --- ⚠️ 3. FIXED PENALTIES ---
+    if (closeTime - currentHour === 1) {
         baseScore = baseScore - ALGO_CONFIG.CLOSING_SOON_PENALTY;
         cons.push(`Closing soon (${closeTime}:00)`);
     }
-    let finalScore = baseScore * wResult.val;
 
+    // --- 🏁 4. FINAL SCORE ---
+    let finalScore = baseScore * effectiveWeatherVal;
     if (finalScore < 0) finalScore = 0;
 
-    // FILL BUCKETS
-    if (wResult.type === "pro") pros.push(wResult.desc);
-    if (wResult.type === "con") cons.push(wResult.desc);
-    
-    // 🛠️ FIX: Comparing the NUMBER (crowdPercent) instead of the OBJECT (cResult)
-    if (crowdPercent > 70) {
-        cons.push("Very crowded");
-    } else if (crowdPercent < 30) {
-        pros.push("Quiet & Peaceful");
+    // --- 📝 5. FILL BUCKETS ---
+    // 1. Process Current Weather
+    if (wNow.type === "pro") {
+        pros.push(wNow.desc);
+    } else if (wNow.type === "con") {
+        cons.push(wNow.desc);
     }
 
+    // 2. Process Future Weather Trend
+    if (wFuture.val < wNow.val) {
+        // If the future is worse than now, add it as a Con
+        cons.push(`Weather worsening soon (${wFuture.desc})`);
+    } else if (wNow.val === 1.0 && wFuture.val === 1.0) {
+        // If both are perfect, confirm the stability
+        pros.push("Consistent dry weather ahead");
+    }
+
+   const cResult = getCrowdScore(blendedCrowd); // Translate the blended number!
+    if (cResult.type === "pro") pros.push(cResult.desc);
+    if (cResult.type === "con") cons.push(cResult.desc);
+    if (cResult.type === "neutral") pros.push(cResult.desc); // Mention moderate crowds as a pro/neutral info
     // UPDATE UI
     const scoreBox = document.querySelector(".score-placeholder h1");
     if (scoreBox) scoreBox.innerText = `${Math.round(finalScore)} / 100`;

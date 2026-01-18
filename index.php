@@ -1,3 +1,4 @@
+<?php session_start(); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,10 +25,24 @@
                 </div>
             </div>
             <div class="right-menu">
-                <div class="filter">
-                    <img src="images/icons8-filter-50.png" alt="FilterIcon">
-                    <p>Filters</p>
+
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                    <a href="admin_dashboard.php" class="admin-link">
+                        <img src="images/icons8-dashboard-50.png" alt="DashboardIcon">
+                        <p>Admin Panel</p>
+                    </a>
+                <?php endif; ?>
+
+
+                <div class="auth-toggle">
+                    <?php if (isset($_SESSION['username'])): ?>
+                        <a href="logout.php" class="logout-btn">Logout</a>
+                    <?php else: ?>
+                        <a href="login.php" class="login-btn">Login</a>
+                    <?php endif; ?>
                 </div>
+            </div>
+            </div>
             </div>
         </div>
     </div>
