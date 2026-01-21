@@ -4,9 +4,9 @@ const ALGO_CONFIG = {
     W_SUNNY: 1.0,            
     W_CLOUDY: 0.90,           
     W_FOG: 0.75,
-    W_DRIZZLE: 0.70,
+    W_DRIZZLE: 0.60,
     W_FREEZING_DRIZZLE: 0.60,
-    W_RAIN: 0.50,   
+    W_RAIN: 0.40,   
     W_HEAVY_RAIN: 0.30,        
     W_STORM: 0.20,            
     CLOSING_SOON_PENALTY: 30, 
@@ -23,28 +23,28 @@ let myChart;
 let hourlyWeather = []; 
 
 
-// --- 🌙 DARK MODE FUNCTION (With Memory!) ---
+// DARK MODE FUNCTION
 function toggleTheme() {
     const body = document.body;
     const icon = document.getElementById('themeIcon');
     
-    // 1. Toggle class
+    
     body.classList.toggle('dark-mode');
     
-    // 2. SAVE the choice to memory
+    
     if (body.classList.contains('dark-mode')) {
-        if(icon) icon.innerText = '☀️'; 
-        localStorage.setItem('theme', 'dark'); // <--- THIS SAVES IT
+        if(icon) icon.innerText = '☀️';
+        localStorage.setItem('theme', 'dark'); 
     } else {
         if(icon) icon.innerText = '🌙';
-        localStorage.setItem('theme', 'light'); // <--- THIS SAVES IT
+        localStorage.setItem('theme', 'light'); 
     }
 }
 
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // 1. APPLY SAVED THEME (Runs on every page load)
+    
     const savedTheme = localStorage.getItem('theme');
     const icon = document.getElementById('themeIcon');
     
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(icon) icon.innerText = '☀️';
     }
 
-    // 2. MAP SETUP (Only runs if map exists, prevents Admin Page crash)
+    // MAP SETUP 
     if (document.getElementById('map')) {
         
         const map = L.map('map').setView([16.41106, 120.59332], 14);
@@ -188,7 +188,7 @@ function calculateScore(id) {
 
     const api_key_private = "pri_7dc8d4ae59904a658f8ecb9488cded6b";
     
-    // SAFE ENCODING
+    
     const safe_name = encodeURIComponent(place.name);
     const safe_address = encodeURIComponent(place.venue_address);
     
@@ -257,7 +257,7 @@ function calculateScore(id) {
                     futureCrowdVal = Math.max(...futureCrowds);
                 }
 
-                // Find index for Current Hour
+                
                 const foundIndex = hourMap.findIndex(data => data.hour === currentHour);
                 let currentCrowdVal = 0;
                 if (foundIndex !== -1) {
@@ -265,13 +265,13 @@ function calculateScore(id) {
                 }
 
 
-                // FUTURE WEATHER: Check Hour+1 and Hour+2
+                // Check Hour+1 at Hour+2
                 const w1 = hourlyWeather[currentHour + 1] || code;
                 const w2 = hourlyWeather[currentHour + 2] || code;
 
                 let futureWeatherCode = w1; 
 
-                // Warn if rain/storm is coming in next 2 hours
+                
                 if (w2 > 50) futureWeatherCode = w2; 
                 if (w1 > 50) futureWeatherCode = w1; 
                 if (w2 > 90) futureWeatherCode = w2; 
@@ -479,25 +479,25 @@ function generateRecommendation(weatherCode, crowdPercent, openTime, closeTime, 
     let pros = [];
     let cons = [];
 
-    // THE BLENDED CROWD MATH ---
+    
     let blendedCrowd = (crowdPercent * ALGO_CONFIG.CURRENT_WEIGHT) + (futureCrowdPercent * ALGO_CONFIG.FUTURE_WEIGHT);
     let crowdRatio = blendedCrowd / 100;
     let crowdPenalty = Math.pow(crowdRatio, ALGO_CONFIG.CROWD_EXPONENT) * ALGO_CONFIG.MAX_CROWD_PENALTY;
 
     let baseScore = 100 - crowdPenalty;
 
-    // THE BLENDED WEATHER MATH ---
+    
     const wNow = getWeatherScore(weatherCode);
     const wFuture = getWeatherScore(futureWeatherCode);
     let effectiveWeatherVal = Math.min(wNow.val, wFuture.val);
 
-    //  FIXED PENALTIES ---
+    
     if (closeTime - currentHour === 1) {
         baseScore = baseScore - ALGO_CONFIG.CLOSING_SOON_PENALTY;
         cons.push(`Closing soon (${closeTime}:00)`);
     }
 
-    // FINAL SCORE ---
+    
     let finalScore = baseScore * effectiveWeatherVal;
     if (finalScore < 0) finalScore = 0;
 
