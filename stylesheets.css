@@ -708,7 +708,7 @@ body.dark-mode .leaflet-popup-tip {
 /* ADMIN DASHBOARD */
 .tool-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 25px;
     margin-top: 40px;
     max-width: 800px; 
