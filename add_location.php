@@ -150,6 +150,6 @@ $total_locations = count($locations);
 
         </div>
     </div>
-
+<script src="index.js"></script>
 </body>
 </html>

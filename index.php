@@ -25,7 +25,9 @@
                 </div>
             </div>
             <div class="right-menu">
-
+               <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+                    <span id="themeIcon">🌙</span>
+                </button>
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                     <a href="admin_dashboard.php" class="admin-link">
                         <p>Admin Panel</p>
@@ -49,8 +51,8 @@
 <main>
         <div class="sidebar-container" id="sidebar">
             <div class="sidebar-top">
-                <img src="" alt="icon">
-                <h2>Places</h2>
+                <img src="images/sign_post.png" alt="icon">
+                <h2>Locations</h2>
                 <span class="close-btn" id="closeSidebar">&times;</span>
             </div>
             <hr>
@@ -93,7 +95,7 @@
 
                 <div class="weather-section">
                     <div class="weather-header">
-                        <p id="modal-text">Status: Fetching live data...</p>
+                        <p id="modal-text">Fetching live data...</p>
                         <p id="weather-output">Loading Weather...</p>
                     </div>
                     <div class="forecast-container">
@@ -121,7 +123,7 @@
                     <h3>Recommendation</h3>
                     <div class="score-placeholder">
                         <h1>-- / 100</h1>
-                        <p>Score calculation coming soon...</p>
+                        <p>Score calculation....</p>
                     </div>
                 </div>
 

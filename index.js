@@ -1,5 +1,4 @@
 const ALGO_CONFIG = {
-   
     CROWD_EXPONENT: 2.5,       
     MAX_CROWD_PENALTY: 100,  
     W_SUNNY: 1.0,            
@@ -16,6 +15,7 @@ const ALGO_CONFIG = {
     FUTURE_WEIGHT: 0.3   
 }
 
+// Global Variables
 let locations = [];
 let modal;
 let openModal;
@@ -23,100 +23,123 @@ let myChart;
 let hourlyWeather = []; 
 
 
+// --- 🌙 DARK MODE FUNCTION (With Memory!) ---
+function toggleTheme() {
+    const body = document.body;
+    const icon = document.getElementById('themeIcon');
+    
+    // 1. Toggle class
+    body.classList.toggle('dark-mode');
+    
+    // 2. SAVE the choice to memory
+    if (body.classList.contains('dark-mode')) {
+        if(icon) icon.innerText = '☀️'; 
+        localStorage.setItem('theme', 'dark'); // <--- THIS SAVES IT
+    } else {
+        if(icon) icon.innerText = '🌙';
+        localStorage.setItem('theme', 'light'); // <--- THIS SAVES IT
+    }
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
     
-    // MAP SETUP 
-    const map = L.map('map').setView([16.41106, 120.59332], 14);
+    // 1. APPLY SAVED THEME (Runs on every page load)
+    const savedTheme = localStorage.getItem('theme');
+    const icon = document.getElementById('themeIcon');
     
-    const streetmap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        if(icon) icon.innerText = '☀️';
+    }
 
-    const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri'
-    });
+    // 2. MAP SETUP (Only runs if map exists, prevents Admin Page crash)
+    if (document.getElementById('map')) {
+        
+        const map = L.map('map').setView([16.41106, 120.59332], 14);
+        
+        const streetmap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
 
-    const MapLayers = {
-        "Street View": streetmap,
-        "Satellite View": satelliteMap
-    };
+        const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri'
+        });
 
-    L.control.layers(MapLayers).addTo(map);
+        const MapLayers = {
+            "Street View": streetmap,
+            "Satellite View": satelliteMap
+        };
+
+        L.control.layers(MapLayers).addTo(map);
 
 
-    //FETCHING LOCATIONS FROM DATABASE
-// FETCHING LOCATIONS FROM DATABASE
-    fetch('database.php')
-        .then(response => response.json())
-        .then(data => {
-            locations = data;
-            const markers = {}; 
-            const cardsContainer = document.getElementById('cards-container'); // Target the sidebar
+        // FETCH LOCATIONS
+        fetch('database.php')
+            .then(response => response.json())
+            .then(data => {
+                locations = data;
+                const markers = {}; 
+                const cardsContainer = document.getElementById('cards-container'); 
 
-            // CLEAR SIDEBAR FIRST (Just in case)
-            cardsContainer.innerHTML = '';
+                if(cardsContainer) cardsContainer.innerHTML = '';
 
-            locations.forEach((loc) => {
-                // 1. CREATE MARKER (Same as before)
-                const marker = L.marker([loc.lat, loc.lng]).addTo(map);
+                locations.forEach((loc) => {
+                    const marker = L.marker([loc.lat, loc.lng]).addTo(map);
 
-                const popupContent = `
-                <div class="custom-popup">
-                    <img src="${loc.image}" alt="${loc.name}" style="width:100%; border-radius:5px; margin-bottom:10px;">
-                    <h3 style="margin:0 0 5px 0;">${loc.name}</h3>
-                    <p style="font-size:13px; color:#555; line-height:1.4;">${loc.desc}</p>
-                    <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
-                    <div style="display:flex; justify-content:center; align-items:center;">
-                        <button onclick="calculateScore(${loc.id})" class="popup-btn">Analyze Live</button>
+                    const popupContent = `
+                    <div class="custom-popup">
+                        <img src="${loc.image}" alt="${loc.name}" style="width:100%; border-radius:5px; margin-bottom:10px;">
+                        <h3 style="margin:0 0 5px 0;">${loc.name}</h3>
+                        <p style="font-size:13px; color:#555; line-height:1.4;">${loc.desc}</p>
+                        <hr style="border:0; border-top:1px solid #eee; margin:10px 0;">
+                        <div style="display:flex; justify-content:center; align-items:center;">
+                            <button onclick="calculateScore(${loc.id})" class="popup-btn" style="width:100%; padding:8px; background:#3498db; color:white; border:none; border-radius:4px; cursor:pointer;">Analyze Live</button>
+                        </div>
                     </div>
-                </div>
-                `;
+                    `;
 
-                marker.bindPopup(popupContent, {
-                    maxWidth: 400,
-                    maxHeight: 500
-                });
+                    marker.bindPopup(popupContent, {
+                        maxWidth: 400,
+                        maxHeight: 500
+                    });
 
-                markers[loc.id] = marker;
+                    markers[loc.id] = marker;
 
-                // 2. CREATE SIDEBAR CARD (New Dynamic Logic)
-                const card = document.createElement('div');
-                card.className = 'card';
-                
-                // Construct Card HTML
-                card.innerHTML = `
-                    <h3>${loc.name}</h3>
-                    <p>${loc.venue_address}</p>
-                `;
+                    // SIDEBAR CARD
+                    if (cardsContainer) {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        card.innerHTML = `
+                            <h3>${loc.name}</h3>
+                            <p>${loc.venue_address}</p>
+                        `;
 
-                // Add Click Event to Fly to Marker
-                card.addEventListener('click', () => {
-                    map.flyTo([loc.lat, loc.lng], 17);
-                    markers[loc.id].openPopup();
-                    
-                    // Close sidebar on mobile
-                    if(window.innerWidth < 500) {
-                        document.getElementById('sidebar').classList.remove('active');
+                        card.addEventListener('click', () => {
+                            map.flyTo([loc.lat, loc.lng], 17);
+                            markers[loc.id].openPopup();
+                            
+                            if(window.innerWidth < 500) {
+                                document.getElementById('sidebar').classList.remove('active');
+                            }
+                        });
+
+                        cardsContainer.appendChild(card);
                     }
                 });
 
-                // Append card to sidebar
-                cardsContainer.appendChild(card);
-            });
-
-        }) 
-        .catch(error => console.error("Database Error:", error));
+            }) 
+            .catch(error => console.error("Database Error:", error));
+    }
 
 
     // MODAL SETUP 
     modal = document.getElementById("recommendation-modal");
-
-    
     const close = document.querySelector(".modalclose-btn");
 
     openModal = function() {
-        modal.style.display = "block";
+        if(modal) modal.style.display = "block";
     }
 
     if (close) {
@@ -131,9 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
- 
-    
-    // SIDEBAR FUNCTIONALITY
+    // SIDEBAR UI
     const menuBtn = document.getElementById('menuToggle');
     const closeBtn = document.getElementById('closeSidebar');
     const sidebar = document.getElementById('sidebar');
@@ -152,13 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-
-
-
-// ------------------------------- ALGORITHM & FUNCTIONS DITO -------------------------------------
-
-
-
+// ------------------------------- ALGORITHM & FUNCTIONS -------------------------------------
 
 function calculateScore(id) {
     const place = locations.find(loc => loc.id == id);
@@ -172,20 +187,28 @@ function calculateScore(id) {
     }
 
     const api_key_private = "pri_7dc8d4ae59904a658f8ecb9488cded6b";
+    
+    // SAFE ENCODING
     const safe_name = encodeURIComponent(place.name);
     const safe_address = encodeURIComponent(place.venue_address);
+    
     const crowdUrl = `https://besttime.app/api/v1/forecasts?venue_name=${safe_name}&venue_address=${safe_address}&api_key_private=${api_key_private}`;
-    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lng}&hourly=temperature_2m,relative_humidity_2m,weather_code&timezone=Asia%2FManila&current_weather=true`;
+    
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lng}&hourly=temperature_2m,relative_humidity_2m,weather_code&timezone=auto&current_weather=true`;
+    
     let code;
 
     // FETCHING WEATHER DATA
     fetch(weatherUrl)
         .then(response => response.json())
         .then((weatherResult) => {
+            
             let code = weatherResult.current_weather.weathercode;
             hourlyWeather = weatherResult.hourly.weather_code; 
             const temp = weatherResult.current_weather.temperature;  
-            const status = weatherStatus(code); 
+            const currentHour = new Date().getHours();
+            const status = weatherStatus(code, currentHour); 
+            
             document.getElementById("weather-output").innerHTML = `<b>Current Weather:</b> ${status}, ${temp}°C`;
             updateForecast(weatherResult.hourly);
             
@@ -201,10 +224,10 @@ function calculateScore(id) {
     fetch(crowdUrl, requestOptions)
         .then(response => response.json())
         .then((liveData) => {
-            console.log("API Success:", liveData);
+            console.log("Crowd API Success:", liveData);
     
             if (liveData.status === "OK") {
-                document.getElementById("modal-text").innerText = `Data Received Successfully! Here is the forecast for today:`
+                document.getElementById("modal-text").innerText = `Here is the forecast for today:`
                 
                 let jsDay = new Date().getDay(); 
                 let apiIndex = (jsDay + 6) % 7; 
@@ -242,18 +265,17 @@ function calculateScore(id) {
                 }
 
 
-                // 2. FUTURE WEATHER: Check Hour+1 and Hour+2, pick the WORST
+                // FUTURE WEATHER: Check Hour+1 and Hour+2
                 const w1 = hourlyWeather[currentHour + 1] || code;
                 const w2 = hourlyWeather[currentHour + 2] || code;
 
-                // Default to first hour
                 let futureWeatherCode = w1; 
 
-                // Logic: If either hour has rain (>50) or storm (>90), use that code
-                if (w2 > 50) futureWeatherCode = w2; // If Hour 2 is rainy, warn about that
-                if (w1 > 50) futureWeatherCode = w1; // If Hour 1 is rainy, warn about that (priority)
-                if (w2 > 90) futureWeatherCode = w2; // If Hour 2 is a STORM, definitely warn that
-                if (w1 > 90) futureWeatherCode = w1; // If Hour 1 is a STORM, definitely warn that
+                // Warn if rain/storm is coming in next 2 hours
+                if (w2 > 50) futureWeatherCode = w2; 
+                if (w1 > 50) futureWeatherCode = w1; 
+                if (w2 > 90) futureWeatherCode = w2; 
+                if (w1 > 90) futureWeatherCode = w1; 
 
 
                 generateRecommendation(code, currentCrowdVal, openTime, closeTime, futureWeatherCode, futureCrowdVal);
@@ -261,25 +283,25 @@ function calculateScore(id) {
                 drawGraph(crowdNumbers);
                 
             } else {
-                document.getElementById("modal-text").innerText = "API Error: " + liveData.message;
+                document.getElementById("modal-text").innerText = "Crowd Data Error: " + liveData.message;
             }
         })
         .catch((error) => {
             console.error("API ERROR:", error);
-            document.getElementById("modal-text").innerText = "Failed to fetch data. Please try again.";
+            document.getElementById("modal-text").innerText = "Failed to fetch crowd data.";
         });
 }
-
-
-
-
 
 
 function weatherStatus(code) {
     if (code === 0) {
         return "☀️ Sunny";
-    } else if (code >= 1 && code <= 3) {
-        return "☁️ Cloudy";
+    } else if (code === 1) {
+        return "🌤️ Mainly Sunny"; 
+    } else if (code === 2) {
+        return "⛅ Partly Cloudy"; 
+    } else if (code === 3) {
+        return "☁️ Overcast";      
     } else if (code >= 45 && code <= 48) {
         return "🌫️ Foggy";
     } else if (code >= 51 && code <= 55) {
@@ -296,7 +318,6 @@ function weatherStatus(code) {
 }
 
 
-
 function updateForecast(hourlyData) {
     
     const currentHour = new Date().getHours(); 
@@ -304,6 +325,8 @@ function updateForecast(hourlyData) {
     for (let i = 0; i < 10; i++) {
         
         let futureIndex = currentHour + i;
+
+        if (!hourlyData.temperature_2m[futureIndex]) break;
 
         let temp = hourlyData.temperature_2m[futureIndex];
         let code = hourlyData.weather_code[futureIndex];
@@ -333,9 +356,6 @@ function updateForecast(hourlyData) {
         if (tempEl) tempEl.innerText = temp + "°C";
     }
 }
-
-
-
 
 
 function drawGraph(crowdData) {
@@ -385,11 +405,8 @@ function drawGraph(crowdData) {
 }
 
 
-
-
 function getWeatherScore(code) {
     if (code === 0) {
-        
         return { val: ALGO_CONFIG.W_SUNNY, desc: "Clear Sky", type: "pro" };
     } 
     else if (code >= 1 && code <= 3) {
@@ -399,7 +416,6 @@ function getWeatherScore(code) {
         return { val: ALGO_CONFIG.W_FOG, desc: "Foggy", type: "neutral" };
     }
     else if ((code >= 51 && code <= 55)) {
-        
         return { val: ALGO_CONFIG.W_DRIZZLE, desc: "Drizzle", type: "con" };
     }
     else if ((code >= 56 && code <= 57)) {
@@ -417,7 +433,6 @@ function getWeatherScore(code) {
     else if (code >= 95) {
         return { val: ALGO_CONFIG.W_STORM, desc: "Thunderstorms active", type: "con" };
     }
-    // Default
     return { val: 1.0, desc: "Weather data unavailable", type: "neutral" };
 }
 
@@ -429,7 +444,6 @@ function getCrowdScore(percentage) {
         return { val: 1.0, desc: "Low crowd levels", type: "pro" };
     } 
     else if (percentage <= 60) {
-        
         return { val: 0.8, desc: "Moderate foot traffic", type: "con" }; 
     } 
     else if (percentage <= 85) {
@@ -503,14 +517,10 @@ function generateRecommendation(weatherCode, crowdPercent, openTime, closeTime, 
 
     
     if (wFuture.val < wNow.val) {
-        
-// NEW CODE (Ignores "Sunny to Cloudy")
-// Only warn if the score drops AND the future weather is actually bad (less than 0.9)
-    if (wFuture.val < wNow.val && wFuture.val < 0.9) {
-        cons.push(`Weather worsening soon (${wFuture.desc})`);
-}
+        if (wFuture.val < wNow.val && wFuture.val < 0.9) {
+            cons.push(`Weather worsening soon (${wFuture.desc})`);
+        }
     } else if (wNow.val === 1.0 && wFuture.val === 1.0) {
-        
         pros.push("Consistent dry weather ahead");
     }
 
@@ -558,7 +568,7 @@ function loadComments(id) {
                 list.innerHTML += item;
             });
         })
-        .catch(err => console.error("Comment Error:", err));
+        .catch(err => console.error("Error:", err));
 }
 
 function postComment() {
@@ -566,7 +576,7 @@ function postComment() {
     const text = input.value;
 
     if (!text.trim()) {
-        alert("Please write something first!");
+        alert("Write something");
         return;
     }
 

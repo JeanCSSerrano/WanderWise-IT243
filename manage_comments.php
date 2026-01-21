@@ -94,6 +94,6 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         </div>
     </div>
-
+<script src="index.js"></script>
 </body>
 </html>

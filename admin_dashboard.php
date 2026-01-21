@@ -1,11 +1,21 @@
 <?php
 session_start();
+include 'db_connect.php';
 
-// 🛑 SECURITY GATE: Check if user is actually an admin
+// 🛑 SECURITY GATE
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: index.php"); 
     exit();
 }
+
+// 📊 GET LIVE STATS
+// 1. Count Locations
+$loc_stmt = $conn->query("SELECT COUNT(*) FROM locations");
+$total_locations = $loc_stmt->fetchColumn();
+
+// 2. Count Comments
+$comm_stmt = $conn->query("SELECT COUNT(*) FROM comments");
+$total_comments = $comm_stmt->fetchColumn();
 ?>
 
 <!DOCTYPE html>
@@ -14,7 +24,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Lakative</title>
-    <link rel="stylesheet" href="stylesheets.css">
+    <link rel="stylesheet" href="stylesheets.css?v=<?php echo time(); ?>">
 </head>
 <body class="admin-page-body">
     <div class="header-bar">
@@ -29,26 +39,41 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                 </div>
             </div>
             <div class="right-menu">
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" style="margin-right: 10px;">
+                    <span id="themeIcon">🌙</span>
+                </button>
                 <a href="index.php" class="login-btn">Back to Map</a>
             </div>
         </div>
     </div>
 
     <div class="admin-container">
-        <h1 style="color: black; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">Welcome, <?php echo $_SESSION['username']; ?></h1>
+        
+        <div class="welcome-section">
+            <h1 style="text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Welcome back, <?php echo htmlspecialchars($_SESSION['username']); ?>!</h1>
+        </div>
+
         <div class="tool-grid">
+            
             <div class="tool-card">
-                <h3>Manage Locations</h3>
-                <p>Add and Delete locations</p>
+                <span class="tool-icon">📍</span>
+                <h3>Locations</h3>
+                <div class="stat-number"><?php echo $total_locations; ?></div>
+                <p style="margin-bottom: 20px;">Active places on the map</p>
                 <a href="add_location.php" class="auth-btn">Manage Places</a>
             </div>
             
             <div class="tool-card">
-                <h3>Manage Comments</h3>
-                <p>View and Delete comments</p>
-                <a href="manage_comments.php" class="auth-btn">Manage</a>
+                <span class="tool-icon">💬</span>
+                <h3>User Reviews</h3>
+                <div class="stat-number"><?php echo $total_comments; ?></div>
+                <p style="margin-bottom: 20px;">Total comments posted</p>
+                <a href="manage_comments.php" class="auth-btn">Moderate</a>
             </div>
+
         </div>
     </div>
+
+    <script src="index.js"></script>
 </body>
 </html>
