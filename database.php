@@ -1,20 +1,21 @@
 <?php
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "wanderwise_db";
+// 1. Use your existing PDO connection file
+include 'db_connect.php'; 
 
-$conn = new mysqli($servername, $username, $password, $dbname);
+header('Content-Type: application/json');
 
-if ($conn->connect_error) {
-  die("Connection failed: " . $conn->connect_error);
-}
+try {
+    // 2. PDO Query Style
+    $stmt = $conn->prepare("SELECT * FROM locations");
+    $stmt->execute();
+    
+    // 3. Fetch All Data
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $locations = [];
 
-$sql = "SELECT * FROM locations";
-$result = $conn->query($sql);
-
-if ($result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
+    // 4. Loop and Format
+    foreach($results as $row) {
         $locations[] = array(
             "id" => $row["id"],
             "name" => $row["name"],
@@ -24,14 +25,14 @@ if ($result->num_rows > 0) {
             "desc" => $row["description"],
             "image" => $row["image_url"],
             "open_time" => $row["open_time"],
-            "close_time" => $row["close_time"],
-            
+            "close_time" => $row["close_time"]
         );
     }
+
+    echo json_encode($locations);
+
+} catch(PDOException $e) {
+    // If something goes wrong, send empty JSON or error
+    echo json_encode([]);
 }
-
-header('Content-Type: application/json');
-echo json_encode($locations);
-
-$conn->close();
 ?>
