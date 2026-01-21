@@ -1,8 +1,6 @@
-/* ==========================================================================
-   1. CSS VARIABLES (THEME CONFIGURATION)
-   ========================================================================== */
+/* CSS VARIABLES */
 :root {
-    /* --- Light Mode (Default) --- */
+    /* Light Mode (Default) */
     --bg-body: #f4f7f6;
     --bg-card: #ffffff;
     --bg-sidebar: #ffffff;
@@ -34,7 +32,7 @@
     --admin-gradient: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
 }
 
-/* --- Dark Mode Overrides --- */
+/* DARK MODE OVERRIDES */
 body.dark-mode {
     --bg-body: #121212;
     --bg-card: #1e1e1e;
@@ -57,9 +55,7 @@ body.dark-mode {
     --admin-gradient: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
 }
 
-/* ==========================================================================
-   2. GLOBAL RESET & BASE STYLES
-   ========================================================================== */
+/* GLOBAL RESET & BASE STYLES */
 * { 
     box-sizing: border-box; 
 }
@@ -76,9 +72,7 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-/* ==========================================================================
-   3. HEADER BAR
-   ========================================================================== */
+/* HEADER BAR */
 .header-bar {
     position: fixed; 
     top: 0; 
@@ -108,7 +102,7 @@ body {
     gap: 15px; 
 }
 
-/* Hamburger Menu & Logo */
+/* HAMBURGER MENU & LOGO */
 .menu-btn {
     cursor: pointer; 
     display: flex; 
@@ -126,7 +120,6 @@ body {
     height: 30px; 
     width: 30px; 
     display: block; 
-    /* removed filter: invert(1) so it stays white */
 }
 
 .logo img { 
@@ -152,7 +145,7 @@ body {
     opacity: 0.9; 
 }
 
-/* Right Menu Area */
+/* RIGHT MENU */
 .right-menu { 
     display: flex; 
     align-items: center; 
@@ -207,9 +200,7 @@ body {
     margin: 0; 
 }
 
-/* ==========================================================================
-   4. MAP & SIDEBAR
-   ========================================================================== */
+/* MAP & SIDEBAR */
 .map-viewport {
     position: absolute; 
     top: 90px; 
@@ -302,9 +293,7 @@ body {
     font-size: 14px; 
 }
 
-/* ==========================================================================
-   5. MODAL STYLES (ANALYSIS POPUP)
-   ========================================================================== */
+/* MODAL STYLES */
 .modal {
     position: fixed; 
     display: none; 
@@ -365,7 +354,7 @@ body {
     background: var(--bg-body);
 }
 
-/* --- Modal Inner Sections --- */
+/* MODAL SECTIONS */
 .weather-section, 
 .chart-section, 
 .algorithm-section, 
@@ -377,7 +366,7 @@ body {
     box-shadow: 0 2px 5px rgba(0,0,0,0.02);
 }
 
-/* CHART WRAPPER (Fixes the Squeezed Chart) */
+/* CHART WRAPPER */
 .chart-wrapper {
     position: relative;
     height: 300px; 
@@ -389,7 +378,7 @@ body {
     height: 100% !important;
 }
 
-/* Weather */
+/* WEATHER CARD */
 .weather-header { 
     display: flex; 
     justify-content: space-between; 
@@ -442,7 +431,7 @@ body {
     color: var(--text-main); 
 }
 
-/* Algorithm Score */
+/* ALGORITHM SCORE */
 .algorithm-section {
     background: var(--admin-gradient); 
     color: white;
@@ -463,7 +452,7 @@ body {
     font-size: 36px; 
 }
 
-/* Comments */
+/* COMMENTS LIST */
 .comments-list {
     background: var(--bg-body);
     border: 1px solid var(--border-color);
@@ -509,9 +498,7 @@ body {
     border-radius: 6px;
 }
 
-/* ==========================================================================
-   6. AUTH & ADMIN
-   ========================================================================== */
+/* AUTH & ADMIN PAGES */
 .auth-page {
     display: flex; 
     justify-content: center; 
@@ -552,7 +539,7 @@ body {
     margin-top: 10px;
 }
 
-/* Admin Body Override */
+/* ADMIN BODY OVERRIDE */
 body.admin-page-body {
     overflow-y: auto !important; 
     height: auto !important;
@@ -629,7 +616,6 @@ body.admin-page-body {
 
 /* MOBILE RESPONSIVENESS */
 @media (max-width: 768px) {
-    /* Header Compact */
     .header-bar { 
         height: 70px; 
         padding: 0 10px; 
@@ -647,7 +633,7 @@ body.admin-page-body {
         height: 40px; 
     }
     
-    /* Layout Adjustments */
+    
     .map-viewport { 
         top: 70px; 
     }
@@ -658,7 +644,7 @@ body.admin-page-body {
         width: 85%; 
     }
     
-    /* Modal Full Screen & Better Spacing */
+   
     .modal-content {
         width: 100%; 
         height: 100%; 
@@ -678,13 +664,13 @@ body.admin-page-body {
         padding: 15px; 
     }
     
-    /* Chart Fix for Mobile */
+    
     .chart-wrapper {
         height: 250px; 
         margin-top: 10px;
     }
     
-    /* Hide Button Texts for space */
+    
     .admin-link p { 
         display: none; 
     }
@@ -695,30 +681,23 @@ body.admin-page-body {
         font-size: 12px; 
     }
     
-    /* Tables */
+   
     .table-scroll-wrapper { 
         overflow-x: auto; 
     }
 }
 
-/* ==========================================================================
-   9. DARK MODE MAP FIX (The "Smart" Invert)
-   ========================================================================== */
 
-/* 1. Invert the Street Map Tiles Only */
-/* We target the .leaflet-tile class directly instead of the pane */
 body.dark-mode .leaflet-tile-pane .leaflet-tile {
     filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
 }
 
-/* 2. EXCLUDE Satellite Tiles */
-/* This works because we are filtering the image itself, so we can override it here. */
-/* We look for "arcgisonline" because that's in your Satellite URL */
+
 body.dark-mode .leaflet-tile-pane img[src*="arcgisonline"] {
     filter: none !important;
 }
 
-/* 3. Keep Markers and Popups Normal */
+
 body.dark-mode .leaflet-marker-icon,
 body.dark-mode .leaflet-marker-shadow,
 body.dark-mode .leaflet-popup-content-wrapper,
@@ -726,13 +705,13 @@ body.dark-mode .leaflet-popup-tip {
     filter: none; 
 }
 
-/* --- Admin Dashboard Upgrade --- */
+/* ADMIN DASHBOARD */
 .tool-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Better sizing */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /
     gap: 25px;
     margin-top: 40px;
-    max-width: 800px; /* Center it nicely so it doesn't stretch too wide */
+    max-width: 800px; 
     margin-left: auto;
     margin-right: auto;
 }
@@ -740,17 +719,17 @@ body.dark-mode .leaflet-popup-tip {
 .tool-card {
     background: var(--bg-card);
     padding: 35px;
-    border-radius: 15px; /* Softer corners */
+    border-radius: 15px;
     box-shadow: var(--shadow-light);
     border: 1px solid var(--border-color);
     text-align: center;
-    transition: all 0.3s ease; /* Smooth animation */
+    transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 
 .tool-card:hover {
-    transform: translateY(-5px); /* Lift up effect */
+    transform: translateY(-5px);
     box-shadow: var(--shadow-heavy);
     border-color: var(--primary-color);
 }
@@ -769,7 +748,7 @@ body.dark-mode .leaflet-popup-tip {
     display: block;
 }
 
-/* Make the welcome text look better */
+
 .welcome-section {
     text-align: center;
     margin-bottom: 40px;
@@ -777,7 +756,7 @@ body.dark-mode .leaflet-popup-tip {
 .welcome-section h1 {
     font-size: 32px;
     margin-bottom: 10px;
-    color: var(--text-main); /* Fixes the black text issue */
+    color: var(--text-main); 
 }
 .welcome-section p {
     color: var(--text-sub);

@@ -1,15 +1,14 @@
 <?php
 session_start();
-include 'db_connect.php'; // Include DB to fetch list
+include 'db_connect.php'; 
 
-// Security Check
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: login.php");
     exit();
 }
 
 // FETCH ALL LOCATIONS
-$sql = "SELECT * FROM locations ORDER BY id DESC"; // Newest first
+$sql = "SELECT * FROM locations ORDER BY id DESC"; 
 $stmt = $conn->prepare($sql);
 $stmt->execute();
 $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);

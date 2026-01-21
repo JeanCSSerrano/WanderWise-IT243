@@ -2,18 +2,17 @@
 session_start();
 include 'db_connect.php';
 
-// 🛑 SECURITY GATE
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: index.php"); 
     exit();
 }
 
-// 📊 GET LIVE STATS
-// 1. Count Locations
+// GET LIVE STATS
+
 $loc_stmt = $conn->query("SELECT COUNT(*) FROM locations");
 $total_locations = $loc_stmt->fetchColumn();
 
-// 2. Count Comments
+
 $comm_stmt = $conn->query("SELECT COUNT(*) FROM comments");
 $total_comments = $comm_stmt->fetchColumn();
 ?>
