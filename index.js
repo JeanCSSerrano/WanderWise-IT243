@@ -1,82 +1,22 @@
-// TEMPORARY LANG ITONG MGA VARIABLES, LALAGAY DIN NATIN SA DATABASE
-/*const locations = [
-    { 
-        id: 1, 
-        name: "Burnham Park", 
-        lat: 16.4123795, 
-        lng: 120.5929704, 
-        venue_address: "Jose Abad Santos Dr Baguio 2600 Benguet Philippines", 
-        desc: "Burnham Park, officially known as the Burnham Park Reservation, is a historic urban park located in downtown Baguio, Philippines. The park's design is influenced from the City Beautiful movement; It has a small pond or lagoon situated at the green space's center and has regimented rows of grass and sidewalk.", 
-        crowdLevel: "High", 
-        image: "images/burnham_park.jpg"
-    },
-    { 
-        id: 2, 
-        name: "Mines View Observation Deck", 
-        lat: 16.4195651, 
-        lng: 120.6278588, 
-        venue_address: "Mines View Baguio Benguet Philippines", 
-        desc: "Mines View Park is an overlook park on the northeastern outskirts of Baguio in the Philippines. Located on a land promontory 4 kilometres (2.5 mi) from downtown Baguio, the park overlooks the mining town of Itogon, particularly the abandoned gold and copper mines of the Benguet Corporation, and offers a glimpse of the Amburayan Valley.", 
-        crowdLevel: "Medium",
-        image: "images/mines_view.jpg"
-    },
-    { 
-        id: 3, 
-        name: "Wright Park", 
-        lat: 16.4156997, 
-        lng: 120.6172233, 
-        venue_address: "The Mansion Romulo Dr Baguio Benguet, Philippines", 
-        desc: "Wright Park is a wooded area in Baguio which became known for its horseback riding services for tourists.", 
-        crowdLevel: "Low",
-        image: "images/wright_park.jpg"
-    },
-    { 
-        id: 4, 
-        name: "Camp John Hay Picnic Area", 
-        lat: 16.3996743, 
-        lng: 120.6163387, 
-        venue_address: "9JX8+VG8 Camp John Hay, Baguio Benguet Philippines", 
-        desc: "Camp John Hay is a mixed-used development which serves as a tourist destination and forest watershed reservation in Baguio, Philippines. Camp John Hay features historic sites like the Bell House and Bell Amphitheater, along with gardens such as the History Trail, Secret Garden, and a symbolic “Cemetery of Negativism.” The area also includes a golf course, now managed by the Bases Conversion and Development Authority.", 
-        crowdLevel: "Low",
-        image: "images/art_park.jpg"
-    },
-    { 
-        id: 5, 
-        name: "Botanical Garden", 
-        lat: 16.4150118, 
-        lng: 120.6129064, 
-        venue_address: "37 Leonard Wood Rd Baguio 2600 Benguet Philippines", 
-        desc: "The Baguio Botanical Garden, formerly known as Imelda Park, is a botanical garden in Baguio, Philippines, located on Leonard Wood Road between Wright Park and Teacher's Camp. The park has art galleries provided by the Baguio Arts Guild, and sculptures displaying the culture of the Igorot people. A statue by Ben Hur Villanueva commemorating the people who built Baguio can also be found. One of the garden's main attractions is a 150 m (490 ft) long tunnel which was dug out by Japanese Imperial Army soldiers during World War II for use as storage, treatment, and a bunker.", 
-        crowdLevel: "Medium",
-        image: "images/botanical_garden.png"
-    }
-];
-*/
-
-
 const ALGO_CONFIG = {
    
-    CROWD_EXPONENT: 2.5,       // Gentler curve
+    CROWD_EXPONENT: 2.5,       
     MAX_CROWD_PENALTY: 100,  
-    
-    
     W_SUNNY: 1.0,            
-    W_CLOUDY: 1.0,           
-    W_FOG: 0.85,             
-    W_RAIN: 0.65,            
-    W_STORM: 0.30,            
+    W_CLOUDY: 0.90,           
+    W_FOG: 0.75,
+    W_DRIZZLE: 0.70,
+    W_FREEZING_DRIZZLE: 0.60,
+    W_RAIN: 0.50,   
+    W_HEAVY_RAIN: 0.30,        
+    W_STORM: 0.20,            
     CLOSING_SOON_PENALTY: 30, 
     CLOSED_SCORE: 0,
-
-    
     CURRENT_WEIGHT: 0.7, 
     FUTURE_WEIGHT: 0.3   
 }
 
-
-
 let locations = [];
-
 let modal;
 let openModal;
 let myChart;
@@ -106,19 +46,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     //FETCHING LOCATIONS FROM DATABASE
+// FETCHING LOCATIONS FROM DATABASE
     fetch('database.php')
-        .then (response => response.json())
-        .then (data => {
+        .then(response => response.json())
+        .then(data => {
             locations = data;
-
             const markers = {}; 
-            
+            const cardsContainer = document.getElementById('cards-container'); // Target the sidebar
 
-            // MARKERS AND SIDEBAR DESIGN
-            locations.forEach(loc => {
+            // CLEAR SIDEBAR FIRST (Just in case)
+            cardsContainer.innerHTML = '';
+
+            locations.forEach((loc) => {
+                // 1. CREATE MARKER (Same as before)
                 const marker = L.marker([loc.lat, loc.lng]).addTo(map);
 
-                // FOR THE DESCRIPTIONS OF THE MARKERS
                 const popupContent = `
                 <div class="custom-popup">
                     <img src="${loc.image}" alt="${loc.name}" style="width:100%; border-radius:5px; margin-bottom:10px;">
@@ -129,32 +71,42 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button onclick="calculateScore(${loc.id})" class="popup-btn">Analyze Live</button>
                     </div>
                 </div>
-            `;
+                `;
 
-        marker.bindPopup(popupContent, {
-            maxWidth: 400,
-            maxHeight: 500
-        });
+                marker.bindPopup(popupContent, {
+                    maxWidth: 400,
+                    maxHeight: 500
+                });
 
-        markers[loc.id] = marker;
-    });
+                markers[loc.id] = marker;
 
-    const cards = document.querySelectorAll('.card');
-    cards.forEach((card, index) => {
-        card.addEventListener('click', () => {
-            const loc = locations[index]; 
-            if (loc) {
-                map.flyTo([loc.lat, loc.lng], 17);
-                markers[loc.id].openPopup();
-                if(window.innerWidth < 500) {
-                    document.getElementById('sidebar').classList.remove('active');
-                }
-            }
-        });
-    });
+                // 2. CREATE SIDEBAR CARD (New Dynamic Logic)
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                // Construct Card HTML
+                card.innerHTML = `
+                    <h3>${loc.name}</h3>
+                    <p>${loc.venue_address}</p>
+                `;
 
-}) 
-    .catch(error => console.error("Database Error:", error)); 
+                // Add Click Event to Fly to Marker
+                card.addEventListener('click', () => {
+                    map.flyTo([loc.lat, loc.lng], 17);
+                    markers[loc.id].openPopup();
+                    
+                    // Close sidebar on mobile
+                    if(window.innerWidth < 500) {
+                        document.getElementById('sidebar').classList.remove('active');
+                    }
+                });
+
+                // Append card to sidebar
+                cardsContainer.appendChild(card);
+            });
+
+        }) 
+        .catch(error => console.error("Database Error:", error));
 
 
     // MODAL SETUP 
@@ -203,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-// ------------------------------- ALGORITHM & FUNCTIONS NGANI -------------------------------------
+// ------------------------------- ALGORITHM & FUNCTIONS DITO -------------------------------------
 
 
 
@@ -230,7 +182,7 @@ function calculateScore(id) {
     fetch(weatherUrl)
         .then(response => response.json())
         .then((weatherResult) => {
-            code = weatherResult.current_weather.weathercode;
+            let code = weatherResult.current_weather.weathercode;
             hourlyWeather = weatherResult.hourly.weather_code; 
             const temp = weatherResult.current_weather.temperature;  
             const status = weatherStatus(code); 
@@ -265,16 +217,14 @@ function calculateScore(id) {
                 const openTime = place.open_time;
                 const closeTime = place.close_time;
                 
-            
-                
-                // FUTURE CROWDS:
+                // FUTURE CROWD DATA
                 let futureCrowds = [];
 
-                // hour 1
+                // HOUR 1
                 const h1Index = hourMap.findIndex(data => data.hour === (currentHour + 1) % 24);
                 if (h1Index !== -1) futureCrowds.push(crowdNumbers[h1Index]);
 
-                // hour 2
+                // HOUR 2
                 const h2Index = hourMap.findIndex(data => data.hour === (currentHour + 2) % 24);
                 if (h2Index !== -1) futureCrowds.push(crowdNumbers[h2Index]);
 
@@ -428,7 +378,7 @@ function drawGraph(crowdData) {
             scales: {
                 y: {
                     beginAtZero: true
-                }
+                }                                               
             }
         }
     }); 
@@ -439,23 +389,35 @@ function drawGraph(crowdData) {
 
 function getWeatherScore(code) {
     if (code === 0) {
-        return { val: 1.0, desc: "Perfect sunny weather", type: "pro" };
+        
+        return { val: ALGO_CONFIG.W_SUNNY, desc: "Clear Sky", type: "pro" };
     } 
     else if (code >= 1 && code <= 3) {
-        return { val: 1.0, desc: "Cloudy", type: "pro" };
+        return { val: ALGO_CONFIG.W_CLOUDY, desc: "Cloudy", type: "pro" };
     }
     else if (code >= 45 && code <= 48) {
-        return { val: 0.8, desc: "Foggy conditions", type: "neutral" };
+        return { val: ALGO_CONFIG.W_FOG, desc: "Foggy", type: "neutral" };
     }
-    else if ((code >= 51 && code <= 55) || (code >= 80 && code <= 82)) {
-        return { val: 0.7, desc: "Light rain/showers", type: "con" };
+    else if ((code >= 51 && code <= 55)) {
+        
+        return { val: ALGO_CONFIG.W_DRIZZLE, desc: "Drizzle", type: "con" };
+    }
+    else if ((code >= 56 && code <= 57)) {
+        return { val: ALGO_CONFIG.W_FREEZING_DRIZZLE, desc: "Freezing Drizzle", type: "con"};
     }
     else if (code >= 61 && code <= 65) {
-        return { val: 0.4, desc: "Raining currently", type: "con" };
+        return { val: ALGO_CONFIG.W_RAIN, desc: "Raining currently", type: "con" };
+    }
+    else if ((code >= 71 && code <= 77)) {
+        return { val: ALGO_CONFIG.W_RAIN, desc: "Cold/Snowy conditions", type: "con" };
+    }
+    else if ((code >= 80 && code <= 82)) {
+        return { val: ALGO_CONFIG.W_HEAVY_RAIN, desc: "Heavy Rain", type: "con"};
     }
     else if (code >= 95) {
-        return { val: 0.2, desc: "Thunderstorms active", type: "con" };
+        return { val: ALGO_CONFIG.W_STORM, desc: "Thunderstorms active", type: "con" };
     }
+    // Default
     return { val: 1.0, desc: "Weather data unavailable", type: "neutral" };
 }
 
@@ -542,7 +504,11 @@ function generateRecommendation(weatherCode, crowdPercent, openTime, closeTime, 
     
     if (wFuture.val < wNow.val) {
         
+// NEW CODE (Ignores "Sunny to Cloudy")
+// Only warn if the score drops AND the future weather is actually bad (less than 0.9)
+    if (wFuture.val < wNow.val && wFuture.val < 0.9) {
         cons.push(`Weather worsening soon (${wFuture.desc})`);
+}
     } else if (wNow.val === 1.0 && wFuture.val === 1.0) {
         
         pros.push("Consistent dry weather ahead");

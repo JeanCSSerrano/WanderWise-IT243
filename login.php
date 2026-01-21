@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login - WanderWise</title>
+    <title>Login - Lakative</title>
     <link rel="stylesheet" href="stylesheets.css">
 </head>
 <body class="auth-page">
     <div class="auth-container">
-        <h2>Welcome Back</h2>
-        <p>Login to manage WanderWise</p>
+        <h2>Welcome!</h2>
+        <p>Login to manage Lakative</p>
         
         <form action="login_process.php" method="POST" class="auth-form">
             <div class="input-group">

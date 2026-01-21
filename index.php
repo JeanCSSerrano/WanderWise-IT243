@@ -28,7 +28,6 @@
 
                 <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
                     <a href="admin_dashboard.php" class="admin-link">
-                        <img src="images/icons8-dashboard-50.png" alt="DashboardIcon">
                         <p>Admin Panel</p>
                     </a>
                 <?php endif; ?>
@@ -47,7 +46,7 @@
         </div>
     </div>
 
-    <main>
+<main>
         <div class="sidebar-container" id="sidebar">
             <div class="sidebar-top">
                 <img src="" alt="icon">
@@ -55,32 +54,8 @@
                 <span class="close-btn" id="closeSidebar">&times;</span>
             </div>
             <hr>
-            <div class="scroll-area">
-                <div class="card">
-                    <h3>Burnham Park</h3>
-                    <p>Baguio City, Baguio</p>
-                </div>
-                <div class="card">
-                    <h3>Mines View Park</h3>
-                    <p>Gibraltar, Baguio</p>
-                </div>
-                <div class="card">
-                    <h3>Wright Park</h3>
-                    <p>Pacdal, Baguio</p>
-                </div>
-                <div class="card">
-                    <h3>Camp John Hay</h3>
-                    <p>Loakan Road, Baguio</p>
-                </div>
-                <div class="card">
-                    <h3>Botanical Garden</h3>
-                    <p>Leonard Wood, Baguio</p>
-                </div>
-                <div class="card">
-                    <h3>SM Baguio</h3>
-                    <p>Luneta Hill, Baguio</p>
-                </div>
-
+            
+            <div class="scroll-area" id="cards-container">
             </div>
         </div>
 
