@@ -542,7 +542,7 @@ let currentLocationId = null;
 function loadComments(id) {
     currentLocationId = id; 
     const list = document.getElementById("comments-list");
-    list.innerHTML = "<p>Loading comments...</p>";
+    list.innerHTML = "<p style='text-align:center; padding:10px; color:#888;'>Loading discussion...</p>";
 
     fetch(`get_comments.php?location_id=${id}`)
         .then(response => response.json())
@@ -550,39 +550,107 @@ function loadComments(id) {
             list.innerHTML = ""; 
             
             if (data.length === 0) {
-                list.innerHTML = "<p style='color:#888; font-size:13px;'>Enter Comment</p>";
+                list.innerHTML = "<p style='text-align:center; color:#888; font-style:italic; margin-top:20px;'>No comments yet. Start the conversation!</p>";
                 return;
             }
 
-            
-            data.forEach(c => {
+            // 1. Separate Parents (Main Threads) and Replies (Sub-comments)
+            // Note: In JS, null checks can be tricky, so we check explicitly
+            const parents = data.filter(c => c.parent_id === null || c.parent_id === "null" || !c.parent_id);
+            const replies = data.filter(c => c.parent_id && c.parent_id !== "null");
+
+            // 2. Render Parent Comments First
+            parents.forEach(p => {
                 const item = `
-                    <div class="comment-item">
+                    <div class="comment-item" id="comment-${p.id}">
                         <div class="comment-header">
-                            <span class="comment-user">${c.username}</span>
-                            <span class="comment-date">${c.created_at}</span>
+                            <span class="comment-user">${p.username}</span>
+                            <span class="comment-date">${formatDate(p.created_at)}</span>
                         </div>
-                        <p class="comment-body">${c.comment_text}</p>
+                        <p class="comment-body">${p.comment_text}</p>
+                        
+                        <div class="comment-actions">
+                            <button onclick="showReplyBox(${p.id})" class="reply-btn">Reply</button>
+                        </div>
+                        
+                        <div id="reply-box-${p.id}" class="reply-input-area" style="display:none;">
+                            <input type="text" id="reply-input-${p.id}" placeholder="Write a reply..." class="reply-field">
+                            <button onclick="postReply(${p.id})" class="send-reply-btn">Send</button>
+                        </div>
+
+                        <div class="replies-container" id="replies-${p.id}"></div>
                     </div>
                 `;
                 list.innerHTML += item;
             });
+
+            // 3. Render Replies (Tuck them inside their Parents)
+            replies.forEach(r => {
+                // Find the parent container
+                const parentDiv = document.getElementById(`replies-${r.parent_id}`);
+                
+                if (parentDiv) {
+                    const replyItem = `
+                        <div class="comment-reply-item">
+                             <div class="comment-header">
+                                <span class="comment-user sub-user">${r.username}</span>
+                                <span class="comment-date">${formatDate(r.created_at)}</span>
+                            </div>
+                            <p class="comment-body">${r.comment_text}</p>
+                            
+                            <button onclick="replyToUser(${r.parent_id}, '${r.username}')" class="reply-btn small-btn">Reply</button>
+                        </div>
+                    `;
+                    parentDiv.innerHTML += replyItem;
+                }
+            });
         })
-        .catch(err => console.error("Error:", err));
+        .catch(err => console.error("Error loading comments:", err));
 }
 
-function postComment() {
-    const input = document.getElementById("comment-input");
+// --- HELPER FUNCTIONS ---
+
+// 1. Show the input box
+function showReplyBox(threadId) {
+    const box = document.getElementById(`reply-box-${threadId}`);
+    const input = document.getElementById(`reply-input-${threadId}`);
+    
+    // Toggle visibility
+    if (box.style.display === "none") {
+        box.style.display = "flex"; // Flex makes it look better
+        input.focus();
+    } else {
+        box.style.display = "none";
+    }
+}
+
+// 2. Reply to a specific user (The "Tagging" Logic)
+function replyToUser(threadId, username) {
+    // Open the main thread box
+    const box = document.getElementById(`reply-box-${threadId}`);
+    const input = document.getElementById(`reply-input-${threadId}`);
+    
+    box.style.display = "flex";
+    
+    // Auto-tag the user
+    input.value = `@${username} `;
+    input.focus();
+}
+
+// 3. Send the data to PHP
+function postReply(parentId) {
+    const input = document.getElementById(`reply-input-${parentId}`);
     const text = input.value;
 
     if (!text.trim()) {
-        alert("Write something");
+        alert("Please write a message first.");
         return;
     }
 
     const formData = new FormData();
     formData.append("location_id", currentLocationId);
     formData.append("comment_text", text);
+    formData.append("parent_id", parentId); // Always link to the Main Parent ID
 
     fetch("submit_comment.php", {
         method: "POST",
@@ -591,11 +659,108 @@ function postComment() {
     .then(response => response.json())
     .then(data => {
         if (data.status === "success") {
-            input.value = ""; 
-            loadComments(currentLocationId); 
+            input.value = ""; // Clear box
+            document.getElementById(`reply-box-${parentId}`).style.display = "none"; // Hide box
+            loadComments(currentLocationId); // Refresh list
         } else {
             alert(data.message);
         }
     })
     .catch(err => console.error("Post Error:", err));
 }
+
+// 4. Simple Date Formatter (Makes it look nicer)
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+
+
+
+// GLOBAL CHAT LOGIC
+
+
+let chatInterval = null;
+const currentUserId = "<?php echo $_SESSION['user_id'] ?? 0; ?>"; // Getting PHP session ID into JS is tricky in external files.
+// BETTER WAY: Let the API tell us who we are, or just assume "me" vs "others" based on username logic later.
+// For now, simpler: We will just style all messages as "others" except if we can match the username.
+
+function toggleChat() {
+    const chatWindow = document.getElementById('chat-window');
+    
+    if (chatWindow.style.display === "none") {
+        chatWindow.style.display = "flex";
+        loadGlobalMessages();
+        // Start polling every 2 seconds
+        chatInterval = setInterval(loadGlobalMessages, 2000);
+    } else {
+        chatWindow.style.display = "none";
+        // Stop polling to save resources
+        if (chatInterval) clearInterval(chatInterval);
+    }
+}
+
+function loadGlobalMessages() {
+    fetch('global_chat_api.php?action=fetch')
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById('chat-messages');
+            
+            // Basic logic: if scrolled to bottom, keep it at bottom after update
+            const isScrolledToBottom = container.scrollHeight - container.scrollTop === container.clientHeight;
+
+            container.innerHTML = ""; // Clear current (Simple way)
+
+            data.forEach(msg => {
+                // Determine if it's "Me" or "Others"
+                // Since we don't have the user ID easily in this JS file, we'll just check if the username matches the session username we stored earlier (if any)
+                // Or simply: style everyone as "others" for now to be safe.
+                
+                const bubble = `
+                    <div class="chat-msg others">
+                        <span class="msg-user">${msg.username}</span>
+                        ${msg.message}
+                    </div>
+                `;
+                container.innerHTML += bubble;
+            });
+
+            // Auto-scroll to bottom if we were already there
+            if (isScrolledToBottom) {
+                container.scrollTop = container.scrollHeight;
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+function sendGlobalMessage() {
+    const input = document.getElementById('global-chat-input');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    const formData = new FormData();
+    formData.append('action', 'send');
+    formData.append('message', msg);
+
+    fetch('global_chat_api.php', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                input.value = "";
+                loadGlobalMessages(); // Refresh immediately
+                // Force scroll to bottom
+                const container = document.getElementById('chat-messages');
+                container.scrollTop = container.scrollHeight;
+            } else {
+                alert("Login required or error: " + data.message);
+            }
+        });
+}
+
+// Allow pressing "Enter" to send
+document.getElementById('global-chat-input').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        sendGlobalMessage();
+    }
+});

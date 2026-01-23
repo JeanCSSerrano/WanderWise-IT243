@@ -130,6 +130,27 @@
             </div> </div>
     </div>
 
+<div id="global-chat-container">
+    <div id="chat-window" class="chat-window" style="display: none;">
+        <div class="chat-header">
+            <span>🌏 Global Chat</span>
+            <button onclick="toggleChat()" class="close-chat-btn">×</button>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+            <p style="color:#aaa; text-align:center; margin-top:50px;">Loading...</p>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="global-chat-input" autocomplete="off">
+            <button onclick="sendGlobalMessage()">➤</button>
+        </div>
+    </div>
+
+    <button id="chat-toggle-btn" onclick="toggleChat()">
+        💬
+    </button>
+</div>
+
+
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script src="index.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
