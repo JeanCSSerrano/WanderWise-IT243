@@ -1,9 +1,9 @@
 <?php
-ob_start(); // 1. Start buffering to prevent "Headers already sent" errors
+ob_start(); 
 session_start();
 include 'db_connect.php';
 
-// Security Check
+
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: login.php");
     exit();
@@ -20,7 +20,7 @@ if (isset($_GET['id'])) {
     }
 }
 
-// 2. Clear buffer and redirect
+
 ob_end_clean(); 
 header("Location: manage_comments.php");
 exit();

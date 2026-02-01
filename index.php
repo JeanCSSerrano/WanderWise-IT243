@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WanderWise</title>
+    <title>Lakative</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
     <link rel="stylesheet" href="stylesheets.css?v=clean_css">
 </head>
@@ -17,7 +17,7 @@
                     <img src="https://img.icons8.com/ios-filled/50/ffffff/menu--v1.png" alt="Menu">
                 </div>
                 <div class="logo">
-                    <img src="images/icons8-location-48.png" alt="WanderWise logo">
+                    <img src="images/LakativeLogo-real.png" alt="Lakative Logo.png">
                 </div>
                 <div class="header-text">
                     <p id="Wise">Lakative</p>

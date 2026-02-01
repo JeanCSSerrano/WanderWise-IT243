@@ -1,6 +1,6 @@
-/* CSS VARIABLES */
+
 :root {
-    /* Light Mode (Default) */
+    /* LIGHT MODE */
     --bg-body: #f4f7f6;
     --bg-card: #ffffff;
     --bg-sidebar: #ffffff;
@@ -8,31 +8,23 @@
     --text-sub: #666666;
     --text-light: #888888;
     --border-color: #eeeeee;
-    
-    /* Brand Colors */
     --primary-color: #3498db;
     --primary-hover: #2980b9;
     --header-bg: #3498db;
     --header-text: #ffffff;
-    
-    /* Status Colors */
     --danger-color: #e74c3c;
     --danger-hover: #c0392b;
     --success-color: #2ecc71;
     --warning-color: #e67e22;
-    
-    /* Components */
     --shadow-light: 0 2px 5px rgba(0,0,0,0.1);
     --shadow-heavy: 0 10px 30px rgba(0,0,0,0.2);
     --modal-overlay: rgba(0, 0, 0, 0.6);
     --input-bg: #ffffff;
     --input-border: #ddd;
-    
-    /* Admin Specific */
     --admin-gradient: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
 }
 
-/* DARK MODE OVERRIDES */
+/* DARK MODE */
 body.dark-mode {
     --bg-body: #121212;
     --bg-card: #1e1e1e;
@@ -102,7 +94,7 @@ body {
     gap: 15px; 
 }
 
-/* HAMBURGER MENU & LOGO */
+/* HAMBURGER MENU AND LOGO */
 .menu-btn {
     cursor: pointer; 
     display: flex; 
@@ -200,7 +192,7 @@ body {
     margin: 0; 
 }
 
-/* MAP & SIDEBAR */
+/* MAP AND SIDEBAR */
 .map-viewport {
     position: absolute; 
     top: 90px; 
@@ -293,7 +285,7 @@ body {
     font-size: 14px; 
 }
 
-/* MODAL STYLES */
+/* MODAL */
 .modal {
     position: fixed; 
     display: none; 
@@ -354,7 +346,6 @@ body {
     background: var(--bg-body);
 }
 
-/* MODAL SECTIONS */
 .weather-section, 
 .chart-section, 
 .algorithm-section, 
@@ -498,32 +489,69 @@ body {
     border-radius: 6px;
 }
 
-/* AUTH & ADMIN PAGES */
+
+
 .auth-page {
     display: flex; 
     justify-content: center; 
     align-items: center;
-    background: var(--admin-gradient); 
+    background-image: url('images/1.png');
+    background-size: cover; 
+    background-position: center;
+    background-repeat: no-repeat;
     height: 100vh;
+    color: #ffffff !important;
+    padding: 20px; 
 }
 
+
+.bg-logo-top-left {
+    position: absolute;
+    top: 0%;      /* Distance from the top */
+    left: 0px;     /* Distance from the left */
+    width: 100px;   /* Adjust this size to make it as "big" as you want */
+    height: auto;   /* Maintains aspect ratio */
+    z-index: 10;    /* Ensures it stays behind the modal but above the background */
+    opacity: 0.9;   /* Slight transparency to blend with the background */
+    filter: drop-shadow(0px 4px 12px rgba(0, 0, 0, 0.6));
+    pointer-events: none; /* Ensures the logo doesn't block mouse clicks */
+    margin: 10px;
+}
+
+
+
 .auth-container {
-    background: var(--bg-card);
+    background: rgba(255, 255, 255, 0.2); 
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     padding: 40px; 
     border-radius: 15px;
-    box-shadow: var(--shadow-heavy);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    
+    /* RESPONSIVE WIDTH LOGIC */
     width: 100%; 
-    max-width: 400px; 
+    max-width: 400px; /* Remains 400px on Desktop */
+    
     text-align: center;
+    z-index: 20;
+}
+.input-group label{
+    color: white;
 }
 
 .input-group input {
     width: 100%; 
     padding: 12px;
-    border: 1px solid var(--input-border);
-    background: var(--input-bg);
-    color: var(--text-main); 
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1); 
+    color: white; 
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px; 
+    outline: none;
+}
+
+.input-group input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .auth-btn {
@@ -539,7 +567,6 @@ body {
     margin-top: 10px;
 }
 
-/* ADMIN BODY OVERRIDE */
 body.admin-page-body {
     overflow-y: auto !important; 
     height: auto !important;
@@ -614,7 +641,7 @@ body.admin-page-body {
     cursor: pointer;
 }
 
-/* MOBILE RESPONSIVENESS */
+/* RESPONSIVE */
 @media (max-width: 768px) {
     .header-bar { 
         height: 70px; 
@@ -672,7 +699,7 @@ body.admin-page-body {
     
     
     .admin-link p { 
-        display: none; 
+        display: block; 
     }
     
     .login-btn, 
@@ -685,6 +712,8 @@ body.admin-page-body {
     .table-scroll-wrapper { 
         overflow-x: auto; 
     }
+
+    
 }
 
 
@@ -705,7 +734,7 @@ body.dark-mode .leaflet-popup-tip {
     filter: none; 
 }
 
-/* ADMIN DASHBOARD */
+/* ADMIN PANEL */
 .tool-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -765,7 +794,7 @@ body.dark-mode .leaflet-popup-tip {
 
 
 
-/* --- REPLYING --- */
+/* REPLYING */
 .replies-container {
     margin-left: 20px;
     margin-top: 10px;
@@ -797,7 +826,7 @@ body.dark-mode .leaflet-popup-tip {
 }
 
 .sub-user {
-    color: #666; /* Slightly lighter color for sub-users */
+    color: #666; 
 }
 
 .reply-input-area {
@@ -830,7 +859,7 @@ body.dark-mode .leaflet-popup-tip {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    z-index: 9999; /* Higher than the map */
+    z-index: 9999; 
     font-family: 'Segoe UI', sans-serif;
 }
 
@@ -894,7 +923,6 @@ body.dark-mode .leaflet-popup-tip {
     gap: 8px;
 }
 
-/* Chat Bubbles */
 .chat-msg {
     padding: 8px 12px;
     border-radius: 8px;

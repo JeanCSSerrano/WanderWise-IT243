@@ -4,27 +4,23 @@ include 'db_connect.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    // 1. GET RAW INPUTS
+    
     $name = trim($_POST['name']);
     $address = trim($_POST['address']);
     $desc = trim($_POST['description']);
     $image = trim($_POST['image_url']) ?: 'images/default.jpg';
     $open = !empty($_POST['open_time']) ? $_POST['open_time'] : 0;
     $close = !empty($_POST['close_time']) ? $_POST['close_time'] : 24;
-    
-    // 2. GET COORDINATES (Strictly Manual)
     $lat = trim($_POST['manual_lat']);
     $lng = trim($_POST['manual_lng']);
 
-    // Validation: Ensure Lat/Lng are not empty
     if (empty($lat) || empty($lng)) {
         $_SESSION['error'] = "Error";
         header("Location: add_location.php");
         exit();
     }
 
-    // --- STEP A: VERIFY WITH BESTTIME API ---
-    // We still check this to ensure the Crowd Data will work with the Name/Address provided
+    // VERIFY SA BESTTIME API 
     $api_key_private = "pri_7dc8d4ae59904a658f8ecb9488cded6b"; 
     $bt_name = urlencode($name);
     $bt_address = urlencode($address);
@@ -46,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     try {
-        // --- STEP B: SAVE TO DATABASE ---
+        // SAVE TO DATABASE
         $sql = "INSERT INTO locations (name, lat, lng, venue_address, description, image_url, open_time, close_time) 
                 VALUES (:name, :lat, :lng, :addr, :desc, :img, :open, :close)";
         

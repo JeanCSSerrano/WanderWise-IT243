@@ -1,10 +1,10 @@
 <?php
-include 'db_connect.php'; // Keep PDO consistency
+include 'db_connect.php'; 
 
 if (isset($_GET['location_id'])) {
     $loc_id = $_GET['location_id'];
 
-    // FIX: Added 'comments.id' and 'comments.parent_id' to the list
+    
     $sql = "SELECT comments.id, comments.parent_id, comments.comment_text, comments.created_at, users.username 
             FROM comments 
             JOIN users ON comments.user_id = users.id 

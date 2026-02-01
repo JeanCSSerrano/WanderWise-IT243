@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login - Lakative</title>
+    <title>Login - LAKATIVE</title>
     <link rel="stylesheet" href="stylesheets.css">
 </head>
 <body class="auth-page">
+    <img src="images/LakativeLogo-real.png" class="bg-logo-top-left" alt="Lakative Logo">
     <div class="auth-container">
-        <h2>Welcome!</h2>
-        <p>Login to manage Lakative</p>
+        <h2>LAKATIVE</h2>
+        <p>Explore Baguio City with a smile!</p>
         
         <form action="login_process.php" method="POST" class="auth-form">
             <div class="input-group">

@@ -28,9 +28,7 @@ function toggleTheme() {
     const body = document.body;
     const icon = document.getElementById('themeIcon');
     
-    
     body.classList.toggle('dark-mode');
-    
     
     if (body.classList.contains('dark-mode')) {
         if(icon) icon.innerText = '☀️';
@@ -43,7 +41,6 @@ function toggleTheme() {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    
     
     const savedTheme = localStorage.getItem('theme');
     const icon = document.getElementById('themeIcon');
@@ -188,7 +185,6 @@ function calculateScore(id) {
 
     const api_key_private = "pri_7dc8d4ae59904a658f8ecb9488cded6b";
     
-    
     const safe_name = encodeURIComponent(place.name);
     const safe_address = encodeURIComponent(place.venue_address);
     
@@ -203,10 +199,16 @@ function calculateScore(id) {
         .then(response => response.json())
         .then((weatherResult) => {
             
-            let code = weatherResult.current_weather.weathercode;
+            code = weatherResult.current_weather.weathercode;
             hourlyWeather = weatherResult.hourly.weather_code; 
-            const temp = weatherResult.current_weather.temperature;  
+            
             const currentHour = new Date().getHours();
+            
+            // --- FIX: USE HOURLY TEMP TO MATCH CARDS ---
+            // Old line: const temp = weatherResult.current_weather.temperature;
+            const temp = weatherResult.hourly.temperature_2m[currentHour];
+            // -------------------------------------------
+
             const status = weatherStatus(code, currentHour); 
             
             document.getElementById("weather-output").innerHTML = `<b>Current Weather:</b> ${status}, ${temp}°C`;
@@ -251,32 +253,26 @@ function calculateScore(id) {
                 const h2Index = hourMap.findIndex(data => data.hour === (currentHour + 2) % 24);
                 if (h2Index !== -1) futureCrowds.push(crowdNumbers[h2Index]);
 
-                
                 let futureCrowdVal = 0;
                 if (futureCrowds.length > 0) {
                     futureCrowdVal = Math.max(...futureCrowds);
                 }
 
-                
                 const foundIndex = hourMap.findIndex(data => data.hour === currentHour);
                 let currentCrowdVal = 0;
                 if (foundIndex !== -1) {
                     currentCrowdVal = crowdNumbers[foundIndex];
                 }
 
-
-                // Check Hour+1 at Hour+2
                 const w1 = hourlyWeather[currentHour + 1] || code;
                 const w2 = hourlyWeather[currentHour + 2] || code;
 
                 let futureWeatherCode = w1; 
 
-                
                 if (w2 > 50) futureWeatherCode = w2; 
                 if (w1 > 50) futureWeatherCode = w1; 
                 if (w2 > 90) futureWeatherCode = w2; 
                 if (w1 > 90) futureWeatherCode = w1; 
-
 
                 generateRecommendation(code, currentCrowdVal, openTime, closeTime, futureWeatherCode, futureCrowdVal);
                 
@@ -458,9 +454,6 @@ function getCrowdScore(percentage) {
 function generateRecommendation(weatherCode, crowdPercent, openTime, closeTime, futureWeatherCode, futureCrowdPercent) {
     const currentHour = new Date().getHours();
 
-    let testCrowd = (crowdPercent * ALGO_CONFIG.CURRENT_WEIGHT) + (futureCrowdPercent * ALGO_CONFIG.FUTURE_WEIGHT);
-    console.log(`Current: ${crowdPercent}, Future: ${futureCrowdPercent}, BLENDED SCORE: ${testCrowd}`);
-    
     
    if (openTime !== 0 || closeTime !== 24) {
         if (currentHour < openTime || currentHour >= closeTime) {
@@ -483,7 +476,6 @@ function generateRecommendation(weatherCode, crowdPercent, openTime, closeTime, 
     let blendedCrowd = (crowdPercent * ALGO_CONFIG.CURRENT_WEIGHT) + (futureCrowdPercent * ALGO_CONFIG.FUTURE_WEIGHT);
     let crowdRatio = blendedCrowd / 100;
     let crowdPenalty = Math.pow(crowdRatio, ALGO_CONFIG.CROWD_EXPONENT) * ALGO_CONFIG.MAX_CROWD_PENALTY;
-
     let baseScore = 100 - crowdPenalty;
 
     
@@ -501,7 +493,7 @@ function generateRecommendation(weatherCode, crowdPercent, openTime, closeTime, 
     let finalScore = baseScore * effectiveWeatherVal;
     if (finalScore < 0) finalScore = 0;
 
-    // FILL BUCKETS ---
+    // FILL BUCKETS
     const cResult = getCrowdScore(blendedCrowd); 
 
    
@@ -554,12 +546,11 @@ function loadComments(id) {
                 return;
             }
 
-            // 1. Separate Parents (Main Threads) and Replies (Sub-comments)
-            // Note: In JS, null checks can be tricky, so we check explicitly
+        
             const parents = data.filter(c => c.parent_id === null || c.parent_id === "null" || !c.parent_id);
             const replies = data.filter(c => c.parent_id && c.parent_id !== "null");
 
-            // 2. Render Parent Comments First
+        
             parents.forEach(p => {
                 const item = `
                     <div class="comment-item" id="comment-${p.id}">
@@ -584,9 +575,9 @@ function loadComments(id) {
                 list.innerHTML += item;
             });
 
-            // 3. Render Replies (Tuck them inside their Parents)
+           
             replies.forEach(r => {
-                // Find the parent container
+                
                 const parentDiv = document.getElementById(`replies-${r.parent_id}`);
                 
                 if (parentDiv) {
@@ -608,36 +599,35 @@ function loadComments(id) {
         .catch(err => console.error("Error loading comments:", err));
 }
 
-// --- HELPER FUNCTIONS ---
 
-// 1. Show the input box
+
+// SHOW INPUT BOX
 function showReplyBox(threadId) {
     const box = document.getElementById(`reply-box-${threadId}`);
     const input = document.getElementById(`reply-input-${threadId}`);
-    
-    // Toggle visibility
+   
     if (box.style.display === "none") {
-        box.style.display = "flex"; // Flex makes it look better
+        box.style.display = "flex"; 
         input.focus();
     } else {
         box.style.display = "none";
     }
 }
 
-// 2. Reply to a specific user (The "Tagging" Logic)
+// REPLY TO USER GAMIT TAGGING
 function replyToUser(threadId, username) {
-    // Open the main thread box
+    
     const box = document.getElementById(`reply-box-${threadId}`);
     const input = document.getElementById(`reply-input-${threadId}`);
     
     box.style.display = "flex";
     
-    // Auto-tag the user
+    
     input.value = `@${username} `;
     input.focus();
 }
 
-// 3. Send the data to PHP
+// SEND NG DATA TO PHP
 function postReply(parentId) {
     const input = document.getElementById(`reply-input-${parentId}`);
     const text = input.value;
@@ -650,7 +640,7 @@ function postReply(parentId) {
     const formData = new FormData();
     formData.append("location_id", currentLocationId);
     formData.append("comment_text", text);
-    formData.append("parent_id", parentId); // Always link to the Main Parent ID
+    formData.append("parent_id", parentId); 
 
     fetch("submit_comment.php", {
         method: "POST",
@@ -659,9 +649,9 @@ function postReply(parentId) {
     .then(response => response.json())
     .then(data => {
         if (data.status === "success") {
-            input.value = ""; // Clear box
-            document.getElementById(`reply-box-${parentId}`).style.display = "none"; // Hide box
-            loadComments(currentLocationId); // Refresh list
+            input.value = ""; 
+            document.getElementById(`reply-box-${parentId}`).style.display = "none"; 
+            loadComments(currentLocationId);
         } else {
             alert(data.message);
         }
@@ -669,7 +659,40 @@ function postReply(parentId) {
     .catch(err => console.error("Post Error:", err));
 }
 
-// 4. Simple Date Formatter (Makes it look nicer)
+// --- ADDED MISSING FUNCTION HERE ---
+function postComment() {
+    const input = document.getElementById('comment-input');
+    const text = input.value;
+
+    if (!text.trim()) {
+        alert("Please write a message first.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("location_id", currentLocationId);
+    formData.append("comment_text", text);
+    // Explicitly sending empty string for parent_id so PHP handles it as NULL
+    formData.append("parent_id", ""); 
+
+    fetch("submit_comment.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === "success") {
+            input.value = ""; 
+            loadComments(currentLocationId); 
+        } else {
+            alert(data.message || "Error posting comment");
+        }
+    })
+    .catch(err => console.error("Post Error:", err));
+}
+// -----------------------------------
+
+
 function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -682,9 +705,7 @@ function formatDate(dateString) {
 
 
 let chatInterval = null;
-const currentUserId = "<?php echo $_SESSION['user_id'] ?? 0; ?>"; // Getting PHP session ID into JS is tricky in external files.
-// BETTER WAY: Let the API tell us who we are, or just assume "me" vs "others" based on username logic later.
-// For now, simpler: We will just style all messages as "others" except if we can match the username.
+const currentUserId = "<?php echo $_SESSION['user_id'] ?? 0; ?>"; 
 
 function toggleChat() {
     const chatWindow = document.getElementById('chat-window');
@@ -692,11 +713,11 @@ function toggleChat() {
     if (chatWindow.style.display === "none") {
         chatWindow.style.display = "flex";
         loadGlobalMessages();
-        // Start polling every 2 seconds
+        
         chatInterval = setInterval(loadGlobalMessages, 2000);
     } else {
         chatWindow.style.display = "none";
-        // Stop polling to save resources
+        
         if (chatInterval) clearInterval(chatInterval);
     }
 }
@@ -707,15 +728,12 @@ function loadGlobalMessages() {
         .then(data => {
             const container = document.getElementById('chat-messages');
             
-            // Basic logic: if scrolled to bottom, keep it at bottom after update
             const isScrolledToBottom = container.scrollHeight - container.scrollTop === container.clientHeight;
 
-            container.innerHTML = ""; // Clear current (Simple way)
+            container.innerHTML = ""; 
 
             data.forEach(msg => {
-                // Determine if it's "Me" or "Others"
-                // Since we don't have the user ID easily in this JS file, we'll just check if the username matches the session username we stored earlier (if any)
-                // Or simply: style everyone as "others" for now to be safe.
+                
                 
                 const bubble = `
                     <div class="chat-msg others">
@@ -726,7 +744,7 @@ function loadGlobalMessages() {
                 container.innerHTML += bubble;
             });
 
-            // Auto-scroll to bottom if we were already there
+            
             if (isScrolledToBottom) {
                 container.scrollTop = container.scrollHeight;
             }
@@ -748,8 +766,8 @@ function sendGlobalMessage() {
         .then(data => {
             if (data.status === 'success') {
                 input.value = "";
-                loadGlobalMessages(); // Refresh immediately
-                // Force scroll to bottom
+                loadGlobalMessages(); 
+                
                 const container = document.getElementById('chat-messages');
                 container.scrollTop = container.scrollHeight;
             } else {
@@ -758,7 +776,7 @@ function sendGlobalMessage() {
         });
 }
 
-// Allow pressing "Enter" to send
+
 document.getElementById('global-chat-input').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
         sendGlobalMessage();

@@ -2,7 +2,7 @@
 session_start();
 include 'db_connect.php';
 
-// Security Check
+// CHECK IF USER ADMIN
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: login.php");
     exit();
@@ -23,7 +23,8 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Manage Comments - Admin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moderate Discussion - Lakative</title>
     <link rel="stylesheet" href="stylesheets.css?v=<?php echo time(); ?>">
     <script>
         function confirmDelete(id) {
@@ -35,50 +36,57 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body class="admin-page-body">
 
-    <div class="header-bar">
+    <header class="header-bar">
         <div class="header-elements">
             <div class="left-menu">
-                <div class="logo"><img src="images/icons8-location-48.png" alt="Logo"></div>
+                <div class="logo">
+                    <img src="images/LakativeLogo-real.png" alt="Logo">
+                </div>
                 <div class="header-text">
                     <p id="Wise">Lakative</p>
-                    <p id="Tagline">Admin Panel</p>
+                    <p id="Tagline">Moderate Discussion</p>
                 </div>
             </div>
             <div class="right-menu">
                 <a href="admin_dashboard.php" class="login-btn">Back to Dashboard</a>
             </div>
         </div>
-    </div>
+    </header>
 
     <div class="admin-container">
-        <div class="admin-form-wrapper wrapper-wide"> 
+        <div class="admin-form-wrapper"> 
             
-            <div class="admin-header">
-                <h2>Moderate Comments (<?php echo count($comments); ?>)</h2>
+            <div class="welcome-section">
+                <h1>Manage Comments</h1>
+                <p>Monitor and remove inappropriate user feedback.</p>
             </div>
 
             <?php if(isset($_SESSION['success'])): ?>
-                <div class="alert alert-success"><?php echo $_SESSION['success']; unset($_SESSION['success']); ?></div>
+                <div class="alert alert-success" style="color: #2ecc71; margin-bottom: 15px; font-weight: bold;">
+                    <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
+                </div>
             <?php endif; ?>
 
-            <div class="table-scroll-wrapper large-table">
+            <div class="table-scroll-wrapper">
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th class="th-user">User</th>
-                            <th class="th-place">Place</th>
-                            <th class="th-comment">Comment</th>
-                            <th class="th-date">Date</th>
-                            <th class="th-action">Action</th>
+                            <th>User</th>
+                            <th>Comment</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($comments as $c): ?>
                         <tr>
-                            <td><strong><?php echo htmlspecialchars($c['username']); ?></strong></td>
-                            <td class="td-place"><?php echo htmlspecialchars($c['place_name']); ?></td>
-                            <td><?php echo htmlspecialchars($c['comment_text']); ?></td>
-                            <td class="td-date"><?php echo date('M d', strtotime($c['created_at'])); ?></td>
+                            <td>
+                                <strong><?php echo htmlspecialchars($c['username']); ?></strong><br>
+                                <small style="color: var(--text-light);"><?php echo htmlspecialchars($c['place_name']); ?></small>
+                            </td>
+                            <td>
+                                <p style="margin: 0; font-size: 14px;"><?php echo htmlspecialchars($c['comment_text']); ?></p>
+                                <small style="color: var(--text-light);"><?php echo date('M d, g:i A', strtotime($c['created_at'])); ?></small>
+                            </td>
                             <td>
                                 <button onclick="confirmDelete(<?php echo $c['id']; ?>)" class="btn-delete">Delete</button>
                             </td>
@@ -86,7 +94,7 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <?php endforeach; ?>
 
                         <?php if(count($comments) == 0): ?>
-                            <tr><td colspan="5" class="empty-row">No comments yet.</td></tr>
+                            <tr><td colspan="3" class="empty-row" style="text-align: center; padding: 20px;">No comments yet.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -94,6 +102,6 @@ $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         </div>
     </div>
-<script src="index.js"></script>
-</body>
+
+    </body>
 </html>

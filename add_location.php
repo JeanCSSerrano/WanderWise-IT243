@@ -7,7 +7,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-// FETCH ALL LOCATIONS
+// FETCH LOCATIONS
 $sql = "SELECT * FROM locations ORDER BY id DESC"; 
 $stmt = $conn->prepare($sql);
 $stmt->execute();
@@ -24,7 +24,7 @@ $total_locations = count($locations);
     <link rel="stylesheet" href="stylesheets.css?v=<?php echo time(); ?>">
     <script>
         function confirmDelete(id) {
-            if (confirm("Are you sure you want to delete this location? This will also delete all user comments associated with it.")) {
+            if (confirm("Are you sure you want to delete this location?")) {
                 window.location.href = "delete_location.php?id=" + id;
             }
         }

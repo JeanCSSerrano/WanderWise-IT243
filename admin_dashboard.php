@@ -7,8 +7,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-// GET LIVE STATS
-
 $loc_stmt = $conn->query("SELECT COUNT(*) FROM locations");
 $total_locations = $loc_stmt->fetchColumn();
 
