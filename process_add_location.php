@@ -1,10 +1,10 @@
 <?php
 session_start();
 include 'db_connect.php'; 
+include 'logger.php'; // Import Logger
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    
     $name = trim($_POST['name']);
     $address = trim($_POST['address']);
     $desc = trim($_POST['description']);
@@ -15,7 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $lng = trim($_POST['manual_lng']);
 
     if (empty($lat) || empty($lng)) {
-        $_SESSION['error'] = "Error";
+        $_SESSION['error'] = "Error: Missing coordinates";
         header("Location: add_location.php");
         exit();
     }
@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     curl_close($ch);
 
     if (!isset($bt_data['status']) || $bt_data['status'] == "error") {
-        $_SESSION['error'] = "Error.";
+        $_SESSION['error'] = "Error validating location with BestTime API.";
         header("Location: add_location.php");
         exit();
     }
@@ -58,12 +58,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             ':close' => $close
         ]);
 
+        // 1. GET THE NEW ID
+        $newLocId = $conn->lastInsertId();
+
+        // 2. LOG IT
+        // Action: "Add Location"
+        // Details: "Admin added new place: 'Sky Ranch'"
+        logActivity("Add Location", "Admin added new place: '$name'", $newLocId);
+
         $_SESSION['success'] = "Success! Location added at GPS: $lat, $lng";
         header("Location: add_location.php");
         exit();
 
     } catch(PDOException $e) {
         $_SESSION['error'] = "Database Error: " . $e->getMessage();
+        logActivity("Error", "Failed to add location '$name': " . $e->getMessage());
         header("Location: add_location.php");
         exit();
     }

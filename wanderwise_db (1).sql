@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 01, 2026 at 04:58 PM
+-- Generation Time: Feb 05, 2026 at 04:04 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,43 @@ SET time_zone = "+00:00";
 --
 -- Database: `wanderwise_db`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `activity_logs`
+--
+
+CREATE TABLE `activity_logs` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `location_id` int(11) DEFAULT NULL,
+  `comment_id` int(11) DEFAULT NULL,
+  `global_chat_id` int(11) DEFAULT NULL,
+  `action_type` varchar(50) NOT NULL,
+  `details` text DEFAULT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `activity_logs`
+--
+
+INSERT INTO `activity_logs` (`id`, `user_id`, `location_id`, `comment_id`, `global_chat_id`, `action_type`, `details`, `ip_address`, `created_at`) VALUES
+(1, 1, NULL, NULL, NULL, 'User Logged In Successfully', 'admin', '::1', '2026-02-05 14:40:09'),
+(2, 1, 2, NULL, NULL, 'Post Comment', 'Posted: \'test\' on Mines View Observation Deck', '::1', '2026-02-05 14:40:24'),
+(3, 1, 2, NULL, NULL, 'Post Comment', 'Posted: \'test\' on Mines View Observation Deck', '::1', '2026-02-05 14:40:38'),
+(4, 1, NULL, NULL, 11, 'Global Chat', 'Sent: \'test\'', '::1', '2026-02-05 14:41:49'),
+(5, 1, NULL, NULL, NULL, 'Deleted comment: \'test\' from Mines View Obse', 'admin', '::1', '2026-02-05 14:42:10'),
+(6, 1, NULL, NULL, NULL, 'Deleted comment: \'test\' from Mines View Observatio', 'admin', '::1', '2026-02-05 14:43:13'),
+(7, 3, NULL, NULL, NULL, 'User Logged In Successfully', 'Jean', '::1', '2026-02-05 14:48:26'),
+(8, 3, NULL, NULL, NULL, 'Failed Login Attempt for username: \'jEAN\'', 'Guest', '::1', '2026-02-05 14:48:50'),
+(9, 1, NULL, NULL, NULL, 'User Logged In Successfully', 'admin', '::1', '2026-02-05 14:50:19'),
+(10, 1, 4, NULL, NULL, 'Post Comment', 'Posted: \'test\' on Camp John Hay Picnic Area', '::1', '2026-02-05 14:50:31'),
+(11, 1, 4, NULL, NULL, 'Post Comment', 'Posted: \'test\' on Camp John Hay Picnic Area', '::1', '2026-02-05 14:55:19'),
+(14, 1, 6, NULL, NULL, 'Post Comment', 'Posted: \'comment\' on SM City Baguio', '::1', '2026-02-05 14:56:31'),
+(15, 1, 6, NULL, NULL, 'Delete Comment', 'Admin removed comment: \'comment\' from SM City Baguio', '::1', '2026-02-05 14:59:11');
 
 -- --------------------------------------------------------
 
@@ -51,9 +88,9 @@ INSERT INTO `comments` (`id`, `user_id`, `location_id`, `comment_text`, `created
 (11, 3, 4, '@Jean hey', '2026-01-23 12:24:06', 7),
 (12, 3, 4, '@Jean jaslkdjlkasd', '2026-02-01 12:13:47', 6),
 (13, 1, 8, 'chart', '2026-02-01 13:15:44', NULL),
-(14, 1, 8, 'reply gumagana', '2026-02-01 13:15:50', 13),
 (15, 1, 1, 'jean', '2026-02-01 14:44:15', NULL),
-(16, 1, 1, 'test', '2026-02-01 14:44:22', 15);
+(16, 1, 1, 'test', '2026-02-01 14:44:22', 15),
+(17, 5, 9, 'Test', '2026-02-05 13:41:34', NULL);
 
 -- --------------------------------------------------------
 
@@ -79,7 +116,11 @@ INSERT INTO `global_chat` (`id`, `user_id`, `message`, `created_at`) VALUES
 (4, 1, 'test', '2026-02-01 09:37:50'),
 (5, 3, 'klajsldkjalksd', '2026-02-01 12:14:08'),
 (6, 1, 'jhasdjka', '2026-02-01 14:44:44'),
-(7, 3, 'asdasdasd', '2026-02-01 14:44:56');
+(7, 3, 'asdasdasd', '2026-02-01 14:44:56'),
+(8, 1, 'yes', '2026-02-05 13:42:43'),
+(9, 1, 'test', '2026-02-05 13:42:49'),
+(10, 6, 'test', '2026-02-05 13:50:26'),
+(11, 1, 'test', '2026-02-05 14:41:49');
 
 -- --------------------------------------------------------
 
@@ -139,11 +180,23 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `username`, `password_hash`, `role`, `created_at`) VALUES
 (1, 'admin', '$2y$10$CV6eaCHOrlB8TQv/pPFGKuJO7Oif6Jmtb1YXZAxM5Dk94WgOahMwC', 'admin', '2026-01-17 23:56:17'),
 (3, 'Jean', '$2y$10$91/SFO5gOVFMJguQyq5Ql.NcY/JvAbigwYQw33tefFmlniUi7PeBG', 'user', '2026-01-18 00:29:30'),
-(4, 'Marvin', '$2y$10$h.ovBcSmzc7LuDwHLb5G8uaTVwbZaisOEZ6Jlbzyd4riqsYpBCejG', 'user', '2026-02-01 12:09:05');
+(4, 'Marvin', '$2y$10$h.ovBcSmzc7LuDwHLb5G8uaTVwbZaisOEZ6Jlbzyd4riqsYpBCejG', 'user', '2026-02-01 12:09:05'),
+(5, 'Test', '$2y$10$Sr9oGRunFYEtTCVPJhdbVuQ2w4p0IDtJ8evjlexVpIwCW7JhuMLu6', 'user', '2026-02-05 13:40:34'),
+(6, 'Test 2', '$2y$10$MCQYpBC/SUWmA2HDJTHNhe.xsX7So0oXHUHwXS3CGy9kiqVDNSNdm', 'user', '2026-02-05 13:50:03');
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `location_id` (`location_id`),
+  ADD KEY `comment_id` (`comment_id`),
+  ADD KEY `global_chat_id` (`global_chat_id`);
 
 --
 -- Indexes for table `comments`
@@ -178,16 +231,22 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
 -- AUTO_INCREMENT for table `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `global_chat`
 --
 ALTER TABLE `global_chat`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `locations`
@@ -199,11 +258,20 @@ ALTER TABLE `locations`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `activity_logs`
+--
+ALTER TABLE `activity_logs`
+  ADD CONSTRAINT `activity_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `activity_logs_ibfk_2` FOREIGN KEY (`location_id`) REFERENCES `locations` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `activity_logs_ibfk_3` FOREIGN KEY (`comment_id`) REFERENCES `comments` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `activity_logs_ibfk_4` FOREIGN KEY (`global_chat_id`) REFERENCES `global_chat` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `comments`

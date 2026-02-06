@@ -1,12 +1,13 @@
 <?php
 session_start();
 include 'db_connect.php';
+include 'logger.php'; 
 
 header('Content-Type: application/json');
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 
-// 1. FETCH MESSAGES 
+// FETCH MESSAGES 
 if ($action === 'fetch') {
     $sql = "SELECT c.message, c.created_at, u.username, u.id as user_id
             FROM global_chat c
@@ -16,7 +17,6 @@ if ($action === 'fetch') {
     $stmt = $conn->prepare($sql);
     $stmt->execute();
     $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
     echo json_encode(array_reverse($messages));
     exit();
 }
@@ -34,10 +34,16 @@ if ($action === 'send') {
         exit();
     }
 
-    
     try {
         $stmt = $conn->prepare("INSERT INTO global_chat (user_id, message) VALUES (?, ?)");
         $stmt->execute([$_SESSION['user_id'], $message]);
+        
+        // *** NEW: GET CHAT ID ***
+        $chatId = $conn->lastInsertId();
+        
+        // LOG IT
+        logActivity("Global Chat", "Sent: '$message'", NULL, NULL, $chatId);
+
         echo json_encode(['status' => 'success']);
     } catch (PDOException $e) {
         echo json_encode(['status' => 'error', 'message' => 'Database error']);

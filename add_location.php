@@ -35,10 +35,10 @@ $total_locations = count($locations);
     <div class="header-bar">
         <div class="header-elements">
             <div class="left-menu">
-                <div class="logo"><img src="images/icons8-location-48.png" alt="Logo"></div>
+                <div class="logo"><img src="images/LakativeLogo-real.png" alt="Logo"></div>
                 <div class="header-text">
                     <p id="Wise">Lakative</p>
-                    <p id="Tagline">Admin Panel</p>
+                    <p id="Tagline">Manage Locations</p>
                 </div>
             </div>
             <div class="right-menu">

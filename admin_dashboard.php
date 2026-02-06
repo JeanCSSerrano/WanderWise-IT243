@@ -28,7 +28,7 @@ $total_comments = $comm_stmt->fetchColumn();
         <div class="header-elements">
             <div class="left-menu">
                 <div class="logo">
-                    <img src="images/icons8-location-48.png" alt="Lakative logo">
+                    <img src="images/LakativeLogo-real.png" alt="Lakative logo">
                 </div>
                 <div class="header-text">
                     <p id="Wise">Lakative</p>
@@ -68,6 +68,13 @@ $total_comments = $comm_stmt->fetchColumn();
                 <a href="manage_comments.php" class="auth-btn">Moderate</a>
             </div>
 
+            <div class="tool-card">
+                <span class="tool-icon">💾</span>
+                <h3>Database Backup</h3>
+                <div class="stat-number">SQL</div>
+                <p style="margin-bottom: 20px;">Download a copy of the database</p>
+                <a href="backup.php" class="auth-btn" style="background-color: #2ecc71;">Download Backup</a>
+            </div>
         </div>
     </div>
 
