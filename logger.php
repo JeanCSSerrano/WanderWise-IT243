@@ -1,5 +1,4 @@
 <?php
-// logger.php
 require_once 'db_connect.php';
 
 function logActivity($action_type, $details = "", $loc_id = NULL, $com_id = NULL, $chat_id = NULL) {
@@ -22,7 +21,6 @@ function logActivity($action_type, $details = "", $loc_id = NULL, $com_id = NULL
         $stmt->execute([$user_id, $loc_id, $com_id, $chat_id, $action_type, $details, $ip_address]);
         
     } catch (PDOException $e) {
-        // Fallback to text file if DB fails
         $entry = "[" . date("Y-m-d H:i:s") . "] DB LOG ERROR: " . $e->getMessage() . PHP_EOL;
         file_put_contents("error_log.txt", $entry, FILE_APPEND);
     }
